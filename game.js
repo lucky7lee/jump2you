@@ -1,11 +1,11 @@
-// ==========================================
+﻿// ==========================================
 // 낭떠러지 줄다리기 가위바위보 - 심플 버전
 // 20초 결정 / 10초 결과 / 큰 화면 결과 + 음성
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
   const DECIDE_MS = 20000;
-  const RESULT_MS = 10000;
+  const RESULT_MS = 3000;
 
   const state = {
     pos: 0,            // -5 ~ +5 (내 땅 = 5 + pos)
@@ -100,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function setPlayerPower(p) {
     state.playerBet = p;
     pPower.textContent = POWER[p];
+    pPower.className = `power-chip p${p}`;
     powerBtns.forEach(b => b.classList.toggle('selected', +b.dataset.bet === p));
   }
 
@@ -135,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.classList.add('hidden');
     pZone.classList.remove('win', 'lose');
     aZone.classList.remove('win', 'lose');
-    aPower.textContent = '?';
+    aPower.textContent = '?'; aPower.className = 'power-chip';
 
     pHand.classList.add('shuffling');
     aHand.classList.add('shuffling');
@@ -190,38 +191,28 @@ document.addEventListener('DOMContentLoaded', () => {
     pHand.textContent = HANDS[playerHand].emoji;
     aHand.textContent = HANDS[ai.hand].emoji;
     aPower.textContent = POWER[ai.bet];
+    aPower.className = `power-chip p${ai.bet}`;
 
     const rps = judge(playerHand, ai.hand);
     let delta = 0;
-    let sub = '';
 
-    if (rps === 'win') {
-      delta = pBet;
-      sub = `+${pBet}칸 전진`;
-    } else if (rps === 'lose') {
-      delta = -ai.bet;
-      sub = `-${ai.bet}칸 후퇴`;
-    } else if (pBet < ai.bet) {
-      delta = ai.bet - pBet;
-      sub = `카운터! +${delta}칸`;
-    } else if (pBet > ai.bet) {
-      delta = -(pBet - ai.bet);
-      sub = `헛스윙! ${delta}칸`;
-    } else {
-      sub = '변동 없음';
-    }
+    if (rps === 'win') delta = pBet;
+    else if (rps === 'lose') delta = -ai.bet;
+    else if (pBet < ai.bet) delta = ai.bet - pBet;      // 무승부 카운터
+    else if (pBet > ai.bet) delta = -(pBet - ai.bet);   // 헛스윙 후딜레이
 
-    // 결과 표시: 나에게 이득이면 이겼다, 손해면 졌다
-    let outcome = delta > 0 ? 'win' : delta < 0 ? 'lose' : 'draw';
+    // 결과 문구: 가위바위보 결과 그대로 + 내 칸 이동 정보만
+    const outcome = rps;
     const label = { win: '이겼다!', lose: '졌다!', draw: '비겼다!' }[outcome];
+    const sub = delta > 0 ? `${delta}칸 전진` : delta < 0 ? `${-delta}칸 후퇴` : '이동 없음';
 
     resultText.textContent = label;
     resultText.className = `result-text ${outcome}`;
     resultSub.textContent = sub;
     overlay.classList.remove('hidden');
 
-    if (outcome === 'win') { pZone.classList.add('win'); aZone.classList.add('lose'); }
-    if (outcome === 'lose') { aZone.classList.add('win'); pZone.classList.add('lose'); }
+    if (delta > 0) { pZone.classList.add('win'); aZone.classList.add('lose'); }
+    if (delta < 0) { aZone.classList.add('win'); pZone.classList.add('lose'); }
 
     window.soundEngine.playRevealImpact();
     if (rps === 'draw' && delta !== 0) window.soundEngine.playCounter();
@@ -288,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
     aHand.classList.remove('shuffling');
     pHand.textContent = '✊';
     aHand.textContent = '✌️';
-    aPower.textContent = '?';
+    aPower.textContent = '?'; aPower.className = 'power-chip';
     setPlayerPower(1);
     updateBoard();
   }

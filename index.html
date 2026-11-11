@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -71,15 +71,15 @@
       <div class="decision hidden" id="decision-panel">
         <div class="row-label">1단계 파워결정</div>
         <div class="power-row">
-          <button class="power-btn selected" data-bet="1">약파워<small>1칸</small></button>
-          <button class="power-btn" data-bet="2">중파워<small>2칸</small></button>
-          <button class="power-btn" data-bet="3">강파워<small>3칸</small></button>
+          <button class="power-btn p1 selected" data-bet="1"><span class="lvl"><i></i><i></i><i></i></span>약파워</button>
+          <button class="power-btn p2" data-bet="2"><span class="lvl"><i></i><i></i><i></i></span>중파워</button>
+          <button class="power-btn p3" data-bet="3"><span class="lvl"><i></i><i></i><i></i></span>강파워</button>
         </div>
         <div class="row-label">2단계 가위바위보 결정</div>
         <div class="rps-row">
-          <button class="rps-btn" data-hand="scissors">✌️ 가위</button>
-          <button class="rps-btn" data-hand="rock">✊ 바위</button>
-          <button class="rps-btn" data-hand="paper">🖐️ 보</button>
+          <button class="rps-btn" data-hand="scissors"><span class="rps-emoji">✌️</span>가위</button>
+          <button class="rps-btn" data-hand="rock"><span class="rps-emoji">✊</span>바위</button>
+          <button class="rps-btn" data-hand="paper"><span class="rps-emoji">🖐️</span>보</button>
         </div>
       </div>
     </footer>
@@ -101,7 +101,7 @@
         <p>• 상대를 5칸 밀어 절벽으로 떨어뜨리면 승리</p>
         <p>• 이기면 내가 고른 파워만큼 전진</p>
         <p>• 비기면 낮은 파워를 낸 쪽이 <b>차이만큼</b> 전진 (후딜레이 카운터)</p>
-        <p>• 결정 시간 20초, 결과 10초 후 자동 진행</p>
+        <p>• 결정 시간 20초, 결과 3초 후 자동 진행</p>
         <button id="btn-close-rules" class="start-btn">닫기</button>
       </div>
     </div>
