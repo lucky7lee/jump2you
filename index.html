@@ -2,307 +2,107 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>낭떠러지 줄다리기 - 가위바위보 심리 대전</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>낭떠러지 줄다리기</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="game-container">
-    <!-- 배경 하늘 & 환경 -->
-    <div class="sky-background">
-      <div class="cloud cloud-1"></div>
-      <div class="cloud cloud-2"></div>
-      <div class="sun"></div>
-    </div>
-
-    <!-- 헤더 / 점수 / 조작 버튼 -->
+    <!-- 상단 헤더 (가로 한 줄) -->
     <header class="game-header">
-      <div class="title-badge">
-        <span class="badge-icon">⚡</span>
-        <h1>낭떠러지 줄다리기</h1>
-        <span class="badge-sub">영토 점령 대전</span>
-      </div>
-      
-      <div class="game-stats-bar">
-        <div class="stat-pill territory-pill">
-          <span class="stat-label">영토 현황</span>
-          <span id="territory-score" class="stat-val">🔴 나 5 : 상대 5 🔵</span>
-        </div>
-        <div class="stat-pill round-pill">
-          <span class="stat-label">ROUND</span>
-          <span id="round-num" class="stat-val">1</span>
-        </div>
-        <div class="stat-pill score-pill">
-          <span class="stat-label">전적</span>
-          <span id="win-record" class="stat-val">0승 0패</span>
-        </div>
-        <div class="header-buttons">
-          <button id="btn-sound-toggle" class="icon-btn" title="소리 켜기/끄기">🔊</button>
-          <button id="btn-rules-open" class="icon-btn" title="규칙 보기">❓</button>
-          <button id="btn-reset-game" class="icon-btn" title="게임 리셋">🔄</button>
-        </div>
+      <h1 class="title">⚡ 낭떠러지 줄다리기</h1>
+      <div class="stats">
+        <span class="pill" id="territory-score">🔴5 : 5🔵</span>
+        <span class="pill">R<b id="round-num">1</b></span>
+        <span class="pill" id="win-record">0승 0패</span>
+        <button id="btn-sound-toggle" class="icon-btn" title="소리">🔊</button>
+        <button id="btn-rules-open" class="icon-btn" title="규칙">❓</button>
+        <button id="btn-reset-game" class="icon-btn" title="리셋">🔄</button>
       </div>
     </header>
 
-    <!-- [상단 1/5 공간]: 실시간 영토 색상(내가 차지한 땅: 빨간색 / 상대 차지한 땅: 파란색) & 마지막칸 긴장 연출 -->
-    <section class="mini-stage-section">
-      <div class="mini-stage-wrapper">
-        <!-- 왼쪽 절벽 (플레이어 낭떠러지) -->
-        <div class="mini-cliff mini-cliff-left">
-          <div class="cliff-face"></div>
-          <span class="cliff-tag">💀 플레이어 절벽</span>
-          <span class="mini-danger-badge" id="danger-left">추락 위험!</span>
-        </div>
-
-        <!-- 10칸 다리 (깃발 위치에 따라 빨간색/파란색 동적 점령) -->
-        <div class="mini-bridge-track" id="bridge-track">
-          <!-- 10개 칸 블록 (JS에서 동적 렌더링 및 색상 업데이트) -->
-          <div class="mini-tiles-row" id="tiles-container"></div>
-          
-          <!-- 줄다리기 로프 -->
-          <div class="mini-rope">
-            <!-- 깃발 마커 (경계면 위) -->
-            <div class="mini-marker" id="rope-center-marker">
-              <span class="mini-flag">🚩</span>
-              <div class="flag-center-pin"></div>
-            </div>
-          </div>
-
-          <!-- 미니 캐릭터 말 -->
-          <div class="mini-chars-layer">
-            <div class="mini-char mini-player" id="player-unit">
-              <span class="mini-avatar">🤠</span>
-              <span class="mini-char-label">나</span>
-            </div>
-            <div class="mini-char mini-ai" id="ai-unit">
-              <span class="mini-avatar">🤖</span>
-              <span class="mini-char-label">상대</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 오른쪽 절벽 (상대편 낭떠러지) -->
-        <div class="mini-cliff mini-cliff-right">
-          <div class="cliff-face"></div>
-          <span class="cliff-tag">💀 상대편 절벽</span>
-          <span class="mini-danger-badge" id="danger-right">추락 위험!</span>
+    <!-- 영토 무대 (깃발 없음) -->
+    <section class="stage">
+      <div class="cliff cliff-left">💀</div>
+      <div class="track">
+        <div class="tiles" id="tiles-container"></div>
+        <div class="chars">
+          <div class="char" id="player-unit">🤠</div>
+          <div class="char" id="ai-unit">🤖</div>
         </div>
       </div>
+      <div class="cliff cliff-right">💀</div>
     </section>
 
-    <!-- [중간 메인 대형 공간]: 크게 확장된 가위바위보 화면 & 좌측 하단 미니 파워표시 -->
-    <main class="main-showdown-arena">
-      <!-- 타이머 및 라운드 상태 바 (20초 결정 시간 / 10초 결과 노출) -->
-      <div class="timer-banner-container">
-        <div class="timer-bar-wrapper">
-          <div class="timer-bar-fill" id="timer-bar-fill"></div>
-        </div>
-        <div class="timer-status-text" id="timer-status-text">
-          <span class="timer-clock-icon">⏳</span>
-          <span id="timer-message">게임을 시작해 주세요!</span>
-          <span class="timer-countdown" id="timer-seconds">20s</span>
-        </div>
+    <!-- 타이머 (결정 시간에만 표시) -->
+    <div class="timer" id="timer-wrap">
+      <div class="timer-bar"><div class="timer-fill" id="timer-bar-fill"></div></div>
+      <span class="timer-sec" id="timer-seconds">20</span>
+    </div>
+
+    <!-- 가위바위보 대형 화면 -->
+    <main class="arena">
+      <div class="fighter player" id="player-fighter-zone">
+        <div class="f-head"><span>🤠 나</span><span class="power-chip" id="player-power-tag">약파워</span></div>
+        <div class="hand" id="player-hand-symbol">✊</div>
       </div>
 
-      <!-- 거대 배틀 쇼다운 박스 -->
-      <div class="giant-showdown-box" id="giant-showdown-box">
-        <!-- 좌측: 플레이어 (나) 대형 가위바위보 카드 -->
-        <div class="fighter-zone player-fighter" id="player-fighter-zone">
-          <div class="fighter-header">
-            <span class="fighter-avatar">🤠</span>
-            <div class="fighter-info">
-              <span class="fighter-name">플레이어 (나)</span>
-            </div>
-          </div>
+      <div class="vs">VS</div>
 
-          <!-- 특대형 가위바위보 손 화면 -->
-          <div class="hand-card-large" id="player-hand-card">
-            <div class="hand-symbol-large" id="player-hand-symbol">✊</div>
-            <div class="hand-state-badge" id="player-hand-badge">선택 대기중</div>
-          </div>
-        </div>
-
-        <!-- 중앙: VS & 판정 결과 및 무승부 카운터 연출 -->
-        <div class="center-clash-zone">
-          <div class="vs-emblem" id="vs-emblem">VS</div>
-          
-          <div class="clash-judgement" id="clash-judgement">
-            <div class="judgement-main" id="judgement-main">준비 중</div>
-            <div class="judgement-sub" id="judgement-sub">20초 안에 결정하세요!</div>
-          </div>
-
-          <!-- 무승부 카운터 특별 뱃지 -->
-          <div class="counter-special-tag hidden" id="counter-special-tag">
-            <span class="tag-sparkle">💥</span>
-            <span id="counter-tag-text">무승부 카운터!</span>
-          </div>
-
-          <!-- 10초 결과 쿨다운 프로그레스 바 -->
-          <div class="cooldown-pill hidden" id="cooldown-pill">
-            <span>다음 승부까지: <strong id="cooldown-seconds">10.0</strong>초</span>
-          </div>
-        </div>
-
-        <!-- 우측: 상대편 (AI) 대형 가위바위보 카드 -->
-        <div class="fighter-zone ai-fighter" id="ai-fighter-zone">
-          <div class="fighter-header">
-            <div class="fighter-info text-right">
-              <span class="fighter-name">상대편 (AI)</span>
-            </div>
-            <span class="fighter-avatar">🤖</span>
-          </div>
-
-          <!-- 특대형 가위바위보 손 화면 -->
-          <div class="hand-card-large" id="ai-hand-card">
-            <div class="hand-symbol-large" id="ai-hand-symbol">✌️</div>
-            <div class="hand-state-badge" id="ai-hand-badge">선택 중...</div>
-          </div>
-        </div>
+      <div class="fighter ai" id="ai-fighter-zone">
+        <div class="f-head"><span class="power-chip" id="ai-power-tag">?</span><span>상대 🤖</span></div>
+        <div class="hand" id="ai-hand-symbol">✌️</div>
       </div>
 
-      <!-- 좌측 하단 1단계 파워결정 표시창 -->
-      <div class="power-summary-strip">
-        <div class="mini-power-card left-power-card" id="player-mini-power">
-          <span class="power-card-label">나의 파워</span>
-          <span class="power-card-val" id="player-power-tag">약파워 (1칸)</span>
-          <div class="mini-meter" id="p-mini-meter">
-            <span class="mini-bar active"></span>
-            <span class="mini-bar"></span>
-            <span class="mini-bar"></span>
-          </div>
-        </div>
-
-        <div class="mini-power-card right-power-card" id="ai-mini-power">
-          <span class="power-card-label">상대 파워</span>
-          <span class="power-card-val" id="ai-power-tag">? (결정 시 공개)</span>
-          <div class="mini-meter" id="ai-mini-meter">
-            <span class="mini-bar"></span>
-            <span class="mini-bar"></span>
-            <span class="mini-bar"></span>
-          </div>
-        </div>
+      <!-- 결과 오버레이 -->
+      <div class="result-overlay hidden" id="result-overlay">
+        <div class="result-text" id="result-text">이겼다!</div>
+        <div class="result-sub" id="result-sub">+3칸</div>
       </div>
     </main>
 
-    <!-- [하단 조작부]: 1단계 파워결정 & 2단계 가위바위보 결정 -->
-    <footer class="bottom-controls-section">
-      <!-- 게임 시작 버튼 -->
-      <div class="start-btn-bar" id="start-btn-bar">
-        <button id="btn-start-game" class="huge-start-btn">
-          <span class="btn-icon">🔥</span>
-          <span class="btn-text">게임 시작 (20초 대결!)</span>
-        </button>
-      </div>
+    <!-- 하단 조작부 -->
+    <footer class="controls">
+      <button id="btn-start-game" class="start-btn">🔥 게임 시작</button>
 
-      <!-- 인게임 인터랙션 패널 -->
-      <div class="decision-panel disabled" id="decision-panel">
-        <!-- 1단계: 파워결정 (가로 세로 크기 줄이고 가운데 맞춤) -->
-        <div class="panel-step step-power">
-          <div class="step-label-row center-label">
-            <span class="step-badge">1단계</span>
-            <span class="step-guide">파워결정</span>
-          </div>
-          <div class="power-btns-center">
-            <button class="power-btn selected" data-bet="1">
-              <span class="power-name">약파워</span>
-              <span class="power-bars-icon">▪▫▫</span>
-              <span class="power-sub">1칸 (잽·카운터)</span>
-            </button>
-            <button class="power-btn" data-bet="2">
-              <span class="power-name">중파워</span>
-              <span class="power-bars-icon">▪▪▫</span>
-              <span class="power-sub">2칸 (스트레이트)</span>
-            </button>
-            <button class="power-btn" data-bet="3">
-              <span class="power-name">강파워</span>
-              <span class="power-bars-icon">▪▪▪</span>
-              <span class="power-sub">3칸 (헤비펀치)</span>
-            </button>
-          </div>
+      <div class="decision hidden" id="decision-panel">
+        <div class="row-label">1단계 파워결정</div>
+        <div class="power-row">
+          <button class="power-btn selected" data-bet="1">약파워<small>1칸</small></button>
+          <button class="power-btn" data-bet="2">중파워<small>2칸</small></button>
+          <button class="power-btn" data-bet="3">강파워<small>3칸</small></button>
         </div>
-
-        <!-- 2단계: 가위바위보 결정 (직사각형 형태) -->
-        <div class="panel-step step-rps">
-          <div class="step-label-row center-label">
-            <span class="step-badge badge-red">2단계</span>
-            <span class="step-guide">가위바위보 결정 (클릭 즉시 판가름!)</span>
-          </div>
-          <div class="rps-rect-grid">
-            <button class="rect-hand-btn hand-scissors" data-hand="scissors">
-              <span class="rect-emoji">✌️</span>
-              <div class="rect-text-col">
-                <span class="rect-name">가위</span>
-                <span class="rect-sub">보를 이김</span>
-              </div>
-            </button>
-            <button class="rect-hand-btn hand-rock" data-hand="rock">
-              <span class="rect-emoji">✊</span>
-              <div class="rect-text-col">
-                <span class="rect-name">바위</span>
-                <span class="rect-sub">가위를 이김</span>
-              </div>
-            </button>
-            <button class="rect-hand-btn hand-paper" data-hand="paper">
-              <span class="rect-emoji">🖐️</span>
-              <div class="rect-text-col">
-                <span class="rect-name">보</span>
-                <span class="rect-sub">바위를 이김</span>
-              </div>
-            </button>
-          </div>
+        <div class="row-label">2단계 가위바위보 결정</div>
+        <div class="rps-row">
+          <button class="rps-btn" data-hand="scissors">✌️ 가위</button>
+          <button class="rps-btn" data-hand="rock">✊ 바위</button>
+          <button class="rps-btn" data-hand="paper">🖐️ 보</button>
         </div>
       </div>
     </footer>
 
-    <!-- 게임 결과 모달 (절벽 추락 시) -->
-    <div id="gameover-modal" class="modal-overlay hidden">
+    <!-- 게임 오버 모달 -->
+    <div id="gameover-modal" class="modal hidden">
       <div class="modal-card">
-        <div id="modal-trophy" class="modal-trophy">🏆</div>
-        <h2 id="modal-title">VICTORY!</h2>
-        <p id="modal-desc">상대를 낭떠러지로 밀어뜨렸습니다!</p>
-        
-        <div class="match-summary">
-          <div class="summary-item">
-            <span>총 진행 라운드</span>
-            <strong id="sum-rounds">5 라운드</strong>
-          </div>
-          <div class="summary-item">
-            <span>무승부 카운터 성공</span>
-            <strong id="sum-counters">2 회</strong>
-          </div>
-          <div class="summary-item">
-            <span>최대 밀치기</span>
-            <strong id="sum-max-move">3 칸</strong>
-          </div>
-        </div>
-
-        <button id="btn-play-again" class="primary-btn">새 게임 시작하기 🔥</button>
+        <div id="modal-trophy" class="trophy">🏆</div>
+        <h2 id="modal-title">최종 승리!</h2>
+        <p id="modal-desc"></p>
+        <button id="btn-play-again" class="start-btn">다시 하기</button>
       </div>
     </div>
 
-    <!-- 룰 설명 모달 -->
-    <div id="rules-modal" class="modal-overlay hidden">
-      <div class="modal-card rules-card">
-        <h2>📜 낭떠러지 줄다리기 룰 안내</h2>
-        <div class="rule-content">
-          <div class="rule-box">
-            <h3>🎯 1. 20초 대결 & 10초 결과 확인</h3>
-            <p><strong>[게임 시작]</strong>을 누르면 20초 동안 가위바위보 손이 빠르게 바뀝니다. 20초 안에 파워와 손을 결정하면 즉시 판가름이 나며, <strong>10초간 결과 확인 후 자동으로 다음 대결이 진행</strong>됩니다.</p>
-          </div>
-          <div class="rule-box">
-            <h3>🔴 2. 영토 점령 (빨간색 vs 파란색)</h3>
-            <p>깃발을 기준으로 <strong>내가 차지한 땅은 빨간색 🔴</strong>, <strong>상대편이 차지한 땅은 파란색 🔵</strong>으로 표시되어 영토의 우세를 한눈에 확인할 수 있습니다.</p>
-          </div>
-          <div class="rule-box highlight-rule">
-            <h3>🛡️ 3. 핵심 룰: '무승부 카운터' (후딜레이)</h3>
-            <p>비겼을 때는 더 적은 파워를 낸 사람이 <strong>두 파워의 차이만큼 상대를 밀어냅니다!</strong><br>
-            <em>예: 상대 강파워(3칸) vs 나 약파워(1칸)로 비기면 👉 상대의 헛스윙으로 내가 2칸(3-1) 밀어냅니다!</em></p>
-          </div>
-        </div>
-        <button id="btn-close-rules" class="secondary-btn">닫기</button>
+    <!-- 룰 모달 -->
+    <div id="rules-modal" class="modal hidden">
+      <div class="modal-card rules">
+        <h2>📜 규칙</h2>
+        <p>• 상대를 5칸 밀어 절벽으로 떨어뜨리면 승리</p>
+        <p>• 이기면 내가 고른 파워만큼 전진</p>
+        <p>• 비기면 낮은 파워를 낸 쪽이 <b>차이만큼</b> 전진 (후딜레이 카운터)</p>
+        <p>• 결정 시간 20초, 결과 10초 후 자동 진행</p>
+        <button id="btn-close-rules" class="start-btn">닫기</button>
       </div>
     </div>
   </div>
