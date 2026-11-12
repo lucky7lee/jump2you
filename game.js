@@ -662,6 +662,15 @@ document.addEventListener('DOMContentLoaded', () => {
     state.pos += delta;
     renderRoundOutcomeUI(pHandKey, aHandKey, pBet, aBet, delta, label, sub, isTimeout);
 
+    // 세트 승패 결정 시 즉시 낭떠러지 추락 연출 및 효과음
+    if (state.pos >= 5) {
+      aiUnit.classList.add('falling');
+      window.soundEngine.playFall();
+    } else if (state.pos <= -5) {
+      playerUnit.classList.add('falling');
+      window.soundEngine.playFall();
+    }
+
     clearTimeout(resultTimeoutId);
     resultTimeoutId = setTimeout(checkSetOrNextRoundSingle, RESULT_MS);
   }
@@ -728,26 +737,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (winner === 'PLAYER') {
       state.setWinsPlayer++;
       state.setHistory.push('P');
-      aiUnit.classList.add('falling');
-      window.soundEngine.playFall();
     } else {
       state.setWinsOpponent++;
       state.setHistory.push('O');
-      playerUnit.classList.add('falling');
-      window.soundEngine.playFall();
     }
     updateBo3UI();
 
-    setTimeout(() => {
-      if (state.setWinsPlayer >= 2 || state.setWinsOpponent >= 2) {
-        handleMatchOver(state.setWinsPlayer >= 2);
-      } else {
-        alert(`세트 종료! 현재 스코어: 나 ${state.setWinsPlayer}승 : ${state.setWinsOpponent}승 상대`);
-        playerUnit.classList.remove('falling');
-        aiUnit.classList.remove('falling');
-        initSet(false);
-      }
-    }, 1000);
+    if (state.setWinsPlayer >= 2 || state.setWinsOpponent >= 2) {
+      handleMatchOver(state.setWinsPlayer >= 2);
+    } else {
+      // 별도 흰 창(alert) 없이 자연스럽게 다음 세트로 진행
+      playerUnit.classList.remove('falling');
+      aiUnit.classList.remove('falling');
+      initSet(false);
+    }
   }
 
   // 매치 최종 종료 모달
@@ -1291,8 +1294,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // 게스트도 정확히 동시에 최종 결과 모달 출력!
           handleMatchOver(data.matchWinner === 'GUEST');
         } else if (data.isSetOver) {
-          // 세트 종료 알림
-          alert(`세트 종료! 현재 스코어: 나 ${data.guestSetWins}승 : ${data.hostSetWins}승 상대`);
+          // 별도 흰 창(alert) 없이 자연스럽게 다음 세트로 진행
           playerUnit.classList.remove('falling');
           aiUnit.classList.remove('falling');
           initSet(false);
@@ -1306,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleSetOverMultiHost(data) {
-    alert(`세트 종료! 현재 스코어: 나 ${data.hostSetWins}승 : ${data.guestSetWins}승 상대`);
+    // 별도 흰 창(alert) 없이 자연스럽게 다음 세트로 진행
     playerUnit.classList.remove('falling');
     aiUnit.classList.remove('falling');
     initSet(false);
