@@ -1,11 +1,11 @@
 ﻿// ==========================================
 // 낭떠러지 줄다리기 가위바위보 - 심플 버전
-// 20초 결정 / 10초 결과 / 큰 화면 결과 + 음성
+// 12초 결정 / 5초 결과 / 큰 화면 결과 + 음성
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  const DECIDE_MS = 20000;
-  const RESULT_MS = 3000;
+  const DECIDE_MS = 12000;
+  const RESULT_MS = 5000;
 
   const state = {
     pos: 0,            // -5 ~ +5 (내 땅 = 5 + pos)
@@ -152,19 +152,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (++tick % 2 === 0) window.soundEngine.playShuffleTick();
     }, 70);
 
-    // 20초 타이머 (결정 시간에만 표시)
+    // 12초 타이머 (결정 시간에만 표시)
     timerWrap.classList.remove('invisible');
     timerFill.classList.remove('urgent');
     let left = DECIDE_MS;
     timerFill.style.width = '100%';
-    timerSec.textContent = '20';
+    timerSec.textContent = '12';
 
     clearInterval(countdownId);
     countdownId = setInterval(() => {
       left -= 100;
       timerSec.textContent = Math.ceil(Math.max(0, left) / 1000);
       timerFill.style.width = `${Math.max(0, left / DECIDE_MS * 100)}%`;
-      if (left <= 5000) {
+      if (left <= 4000) {
         timerFill.classList.add('urgent');
         if (left % 1000 === 0) window.soundEngine.playTimerTick(true);
       }
