@@ -125,7 +125,10 @@
           다른 플레이어의 입장을 기다리고 있습니다...
         </div>
 
-        <button id="btn-leave-room" class="sub-link-btn danger">방 나가기</button>
+        <div class="room-action-row">
+          <button id="btn-host-start-game" class="primary-btn hidden">🔥 게임 시작 (30초)</button>
+          <button id="btn-leave-room" class="sub-link-btn danger">방 나가기</button>
+        </div>
       </div>
     </div>
 
@@ -196,7 +199,8 @@
       <!-- ★ [3판 2승제 승/패 상황표] 메인 화면과 1단계 파워결정 사이에 배치 -->
       <div class="bo3-score-board">
         <div class="bo3-team player-team">
-          <span class="bo3-label" id="bo3-p-label">나 (0승)</span>
+          <span class="bo3-name" id="bo3-p-name">나</span>
+          <span class="bo3-score-badge" id="bo3-p-score">0승</span>
           <div class="bo3-dots" id="bo3-p-dots">
             <span class="dot" data-set="1">－</span>
             <span class="dot" data-set="2">－</span>
@@ -210,7 +214,8 @@
             <span class="dot" data-set="2">－</span>
             <span class="dot" data-set="3">－</span>
           </div>
-          <span class="bo3-label" id="bo3-a-label">상대 (0승)</span>
+          <span class="bo3-score-badge" id="bo3-a-score">0승</span>
+          <span class="bo3-name" id="bo3-a-name">상대</span>
         </div>
       </div>
 
@@ -223,16 +228,16 @@
           <!-- 파워 버튼 4종 한 줄 가운데 정렬 -->
           <div class="power-row">
             <button class="power-btn p1 selected" data-bet="1">
-              <span class="lvl"><i></i><i></i><i></i></span>약파워
+              <span class="lvl"><i></i><i></i><i></i></span>약파워<small class="cnt-badge">∞</small>
             </button>
             <button class="power-btn p2" data-bet="2">
-              <span class="lvl"><i></i><i></i><i></i></span>중파워
+              <span class="lvl"><i></i><i></i><i></i></span>중파워<small class="cnt-badge" id="p-cnt-2">7</small>
             </button>
             <button class="power-btn p3" data-bet="3">
-              <span class="lvl"><i></i><i></i><i></i></span>강파워
+              <span class="lvl"><i></i><i></i><i></i></span>강파워<small class="cnt-badge" id="p-cnt-3">5</small>
             </button>
-            <button class="power-btn p4-special locked" id="btn-special" data-bet="4" title="상대 3연속 약파워 시 활성화">
-              <span class="special-icon">⚡</span>필살기
+            <button class="power-btn p4-special locked" id="btn-special" data-bet="4" title="상대 3연속 약파워 시 활성화 (3회)">
+              <span class="special-icon">⚡</span>필살기<small class="cnt-badge" id="p-cnt-4">0</small>
             </button>
           </div>
 
@@ -284,9 +289,9 @@
       <div class="modal-card rules">
         <h2>📜 낭떠러지 줄다리기 규칙</h2>
         <p>• <b>게임 목표:</b> 상대를 절벽으로 밀어 떨어뜨려 세트 승리를 따내세요! (3판 2승제)</p>
-        <p>• <b>파워 선택:</b> 약파워(1칸), 중파워(2칸), 강파워(3칸)</p>
+        <p>• <b>파워 선택 (1판당):</b> 약파워(무제한), 중파워(7회), 강파워(5회)</p>
         <p>• <b>무승부 후딜레이 카운터:</b> 비겼을 때는 더 적은 파워를 낸 쪽이 <b>차이만큼 상대를 밀어냅니다!</b></p>
-        <p>• <b>⚡ 필살기 (4칸):</b> 상대방이 약파워를 3회 연속 사용하면 나에게 번개 필살기 버튼이 열립니다!</p>
+        <p>• <b>⚡ 필살기 (4칸):</b> 상대방이 약파워를 3회 연속 사용하면 나에게 번개 필살기(3회)가 열립니다!</p>
         <p>• <b>시간 제한:</b> 15초 내에 결정하지 않으면 <b>약파워로 패배</b> 처리됩니다.</p>
         <p>• <b>칭호 시스템:</b> 싱글 3단계(⭐), 5단계(⭐⭐), 8단계(⭐⭐⭐), 10단계 클리어 시 <b>💎 가위바위보 달인</b> 마크가 영구 획득됩니다!</p>
         <button id="btn-close-rules" class="primary-btn">닫기</button>

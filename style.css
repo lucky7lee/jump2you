@@ -380,7 +380,15 @@ body {
 .slot-role.host { background: #e91e63; color: #fff; }
 .slot-role.guest { background: #2196f3; color: #fff; }
 .vs-divider { font-size: 18px; color: var(--gold); }
-.wait-status-msg { font-size: 13px; color: #81d4fa; margin-bottom: 16px; }
+.wait-status-msg { font-size: 13px; color: #81d4fa; margin-bottom: 12px; }
+.room-action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+.room-action-row .primary-btn { width: 100%; padding: 10px; font-size: 15px; }
 
 /* ========================================================
    화면 4: 인게임 배틀 화면 (Game Arena)
@@ -611,47 +619,73 @@ body {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 4px;
   background: rgba(0, 0, 0, 0.55);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 4px 10px;
-  margin: 3px 0 6px;
+  padding: 3px 8px;
+  margin: 2px 0 5px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
 }
 .bo3-title-badge {
-  font-size: 11px;
+  font-size: 10px;
   background: rgba(255, 214, 0, 0.2);
   border: 1px solid var(--gold);
   color: var(--gold);
-  padding: 1px 7px;
+  padding: 1px 5px;
   border-radius: 8px;
+  flex-shrink: 0;
 }
 .bo3-team {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  overflow: hidden;
 }
-.bo3-label {
-  font-size: 12px;
+.player-team { justify-content: flex-start; }
+.ai-team { justify-content: flex-end; }
+
+.bo3-name {
+  font-size: 11px;
   color: #cfd8dc;
+  max-width: 68px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
 }
-.player-team .bo3-label { color: #ff8a80; }
-.ai-team .bo3-label { color: #90caf9; }
+.player-team .bo3-name { color: #ff8a80; }
+.ai-team .bo3-name { color: #90caf9; }
+
+.bo3-score-badge {
+  font-size: 10px;
+  color: var(--gold);
+  background: rgba(255, 255, 255, 0.12);
+  padding: 1px 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
 
 .bo3-dots {
   display: flex;
-  gap: 4px;
+  gap: 3px;
+  flex-shrink: 0;
 }
 .bo3-dots .dot {
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
-  font-size: 11px;
+  font-size: 10px;
   color: #90a4ae;
 }
 .bo3-dots .dot.win {
@@ -727,9 +761,23 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   opacity: 0.75;
   transition: all 0.15s ease;
+}
+.cnt-badge {
+  font-size: 10px;
+  color: #fff;
+  background: rgba(0,0,0,0.4);
+  padding: 1px 4px;
+  border-radius: 6px;
+  font-weight: normal;
+}
+.power-btn.depleted {
+  opacity: 0.25 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(1);
+  border-style: dotted;
 }
 .power-btn.p1 { --c: #00e676; } /* 약파워: 초록 */
 .power-btn.p2 { --c: #ff9100; } /* 중파워: 주황 */
