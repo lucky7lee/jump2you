@@ -142,78 +142,77 @@ body {
   text-align: center;
 }
 
-/* 강렬한 가위바위보 엠블럼 */
+/* 강렬한 가위바위보 엠블럼 (50% 축소 및 120도 정삼각형 완벽 균등 간격 배치) */
 .main-rps-graphic {
   position: relative;
-  width: 106px;
-  height: 98px;
-  margin: 0 auto 10px;
+  width: 66px;
+  height: 62px;
+  margin: 0 auto 6px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 .rps-badge-orbit {
   position: relative;
-  width: 90px;
-  height: 90px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, rgba(15, 23, 42, 0.85) 75%);
-  border: 2px solid rgba(255, 214, 0, 0.5);
-  box-shadow: 0 0 20px rgba(255, 140, 0, 0.4), inset 0 0 15px rgba(255, 23, 68, 0.3);
+  border: 1.5px solid rgba(255, 214, 0, 0.45);
+  box-shadow: 0 0 10px rgba(255, 140, 0, 0.35), inset 0 0 8px rgba(255, 23, 68, 0.25);
   animation: orbitPulse 2.4s infinite alternate ease-in-out;
 }
 @keyframes orbitPulse {
-  0% { transform: scale(0.96); box-shadow: 0 0 14px rgba(255, 140, 0, 0.4); }
-  100% { transform: scale(1.04); box-shadow: 0 0 26px rgba(255, 23, 68, 0.65), 0 0 16px rgba(0, 230, 118, 0.45); }
+  0% { transform: scale(0.96); box-shadow: 0 0 8px rgba(255, 140, 0, 0.35); }
+  100% { transform: scale(1.04); box-shadow: 0 0 14px rgba(255, 23, 68, 0.55), 0 0 10px rgba(0, 230, 118, 0.35); }
 }
 .rps-hand-badge {
   position: absolute;
-  width: 36px;
-  height: 36px;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 19px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  font-size: 11px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
   user-select: none;
 }
+/* 정확히 120도씩 균등 분할된 정삼각형 배치 (0도: 바위, 120도: 가위, 240도: 보) */
 .rps-rock {
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%) rotate(0deg) translateY(-24px) rotate(0deg);
   background: linear-gradient(135deg, #ff5252, #d50000);
-  border: 2px solid #ff8a80;
-  box-shadow: 0 0 14px rgba(255, 23, 68, 0.8);
+  border: 1.5px solid #ff8a80;
+  box-shadow: 0 0 8px rgba(255, 23, 68, 0.75);
 }
 .rps-scissors {
-  bottom: -4px;
-  left: -4px;
+  transform: translate(-50%, -50%) rotate(120deg) translateY(-24px) rotate(-120deg);
   background: linear-gradient(135deg, #2979ff, #0091ea);
-  border: 2px solid #82b1ff;
-  box-shadow: 0 0 14px rgba(0, 176, 255, 0.8);
+  border: 1.5px solid #82b1ff;
+  box-shadow: 0 0 8px rgba(0, 176, 255, 0.75);
 }
 .rps-paper {
-  bottom: -4px;
-  right: -4px;
+  transform: translate(-50%, -50%) rotate(240deg) translateY(-24px) rotate(-240deg);
   background: linear-gradient(135deg, #00e676, #00b248);
-  border: 2px solid #b9f6ca;
-  box-shadow: 0 0 14px rgba(0, 230, 118, 0.8);
+  border: 1.5px solid #b9f6ca;
+  box-shadow: 0 0 8px rgba(0, 230, 118, 0.75);
 }
 .rps-vs-bolt {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 22px;
+  font-size: 13px;
   color: #ffd600;
-  text-shadow: 0 0 8px #ffd600, 0 0 16px #ff6d00;
+  text-shadow: 0 0 5px #ffd600, 0 0 10px #ff6d00;
   animation: boltFlicker 1.2s infinite alternate ease-in-out;
   user-select: none;
 }
 @keyframes boltFlicker {
   0% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.85; }
-  100% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; text-shadow: 0 0 12px #ffd600, 0 0 22px #ff1744; }
+  100% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; text-shadow: 0 0 8px #ffd600, 0 0 14px #ff1744; }
 }
 
 .main-title {
