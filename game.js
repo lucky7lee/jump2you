@@ -5,8 +5,9 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   // --- 상수 설정 ---
-  const DECIDE_MS = 15000;  // 15초 선택 시간
-  const RESULT_MS = 5000;   // 5초 결과 확인 시간
+  const DECIDE_MS = 15000;      // 15초 선택 시간
+  const RESULT_MS = 5000;       // 5초 가위바위보 결과("이겼다/졌다/비겼다") 확인 시간
+  const SET_RESULT_MS = 3000;   // 3초 한판 스코어("1승!/1패!/1승 1패! 등") 확인 시간
 
   const HAND_KEYS = ['scissors', 'rock', 'paper'];
   const HANDS = {
@@ -719,6 +720,56 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => speak(label.replace('!', '')), 200);
   }
 
+  // ---------- 한판 승/패 결정 시 3초간 세트 스코어 결과(1승/1패/1승1패 등) 화면 연출 ----------
+  function getSetResultText(myWins, oppWins) {
+    if (myWins === 1 && oppWins === 0) return '1승!';
+    if (myWins === 0 && oppWins === 1) return '1패!';
+    if (myWins === 1 && oppWins === 1) return '1승 1패!';
+    if (myWins === 2 && oppWins === 0) return '2승!';
+    if (myWins === 0 && oppWins === 2) return '2패!';
+    if (myWins === 2 && oppWins === 1) return '2승 1패!';
+    if (myWins === 1 && oppWins === 2) return '1승 2패!';
+    return `${myWins}승 ${oppWins}패!`;
+  }
+
+  function showSetOutcomeUI(myWins, oppWins, isMyWin, onComplete) {
+    state.phase = 'SET_RESULT';
+    playerUnit.classList.remove('falling');
+    aiUnit.classList.remove('falling');
+
+    const txt = getSetResultText(myWins, oppWins);
+    resultText.textContent = txt;
+    resultText.className = `result-text ${isMyWin ? 'win' : 'lose'}`;
+
+    // 팝 애니메이션 리셋하여 3초간 생동감 있게 팝업
+    resultText.style.animation = 'none';
+    void resultText.offsetWidth;
+    resultText.style.animation = '';
+
+    resultSub.textContent = `현재 스코어: 나 ${myWins}승 : ${oppWins}승 상대`;
+    overlay.classList.remove('hidden');
+
+    pZone.classList.remove('win', 'lose');
+    aZone.classList.remove('win', 'lose');
+    if (isMyWin) {
+      pZone.classList.add('win');
+      aZone.classList.add('lose');
+      window.soundEngine.playVictory();
+    } else {
+      aZone.classList.add('win');
+      pZone.classList.add('lose');
+      window.soundEngine.playDefeat();
+    }
+
+    setTimeout(() => speak(txt.replace('!', '')), 100);
+
+    clearTimeout(resultTimeoutId);
+    resultTimeoutId = setTimeout(() => {
+      overlay.classList.add('hidden');
+      onComplete();
+    }, SET_RESULT_MS);
+  }
+
   // 싱글 세트 판정
   function checkSetOrNextRoundSingle() {
     if (state.pos >= 5) {
@@ -734,7 +785,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function handleSetOverSingle(winner) {
     state.phase = 'SET_OVER';
-    if (winner === 'PLAYER') {
+    const isPlayerWon = (winner === 'PLAYER');
+    if (isPlayerWon) {
       state.setWinsPlayer++;
       state.setHistory.push('P');
     } else {
@@ -743,19 +795,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     updateBo3UI();
 
-    if (state.setWinsPlayer >= 2 || state.setWinsOpponent >= 2) {
-      handleMatchOver(state.setWinsPlayer >= 2);
-    } else {
-      // 별도 흰 창(alert) 없이 자연스럽게 다음 세트로 진행
-      playerUnit.classList.remove('falling');
-      aiUnit.classList.remove('falling');
-      initSet(false);
-    }
+    // 5초간 "이겼다/졌다" 이후 3초간 "1승!/1패!/1승 1패! 등" 보여주고 다음 단계 진행
+    showSetOutcomeUI(state.setWinsPlayer, state.setWinsOpponent, isPlayerWon, () => {
+      if (state.setWinsPlayer >= 2 || state.setWinsOpponent >= 2) {
+        handleMatchOver(state.setWinsPlayer >= 2);
+      } else {
+        initSet(false);
+      }
+    });
   }
 
   // 매치 최종 종료 모달
   function handleMatchOver(isPlayerWon) {
     state.phase = 'MATCH_OVER';
+    overlay.classList.add('hidden');
     modalActionBtns.innerHTML = '';
 
     if (state.mode === 'SINGLE') {
@@ -1219,10 +1272,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       resultTimeoutId = setTimeout(() => {
-        if (data.isMatchOver) {
-          handleMatchOver(data.matchWinner === 'HOST');
-        } else if (data.isSetOver) {
-          handleSetOverMultiHost(data);
+        if (data.isSetOver) {
+          const isHostWon = (data.setWinner === 'HOST');
+          showSetOutcomeUI(data.hostSetWins, data.guestSetWins, isHostWon, () => {
+            if (data.isMatchOver) {
+              handleMatchOver(data.matchWinner === 'HOST');
+            } else {
+              initSet(false);
+            }
+          });
         } else {
           state.round++;
           roundEl.textContent = state.round;
@@ -1290,14 +1348,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       resultTimeoutId = setTimeout(() => {
-        if (data.isMatchOver) {
-          // 게스트도 정확히 동시에 최종 결과 모달 출력!
-          handleMatchOver(data.matchWinner === 'GUEST');
-        } else if (data.isSetOver) {
-          // 별도 흰 창(alert) 없이 자연스럽게 다음 세트로 진행
-          playerUnit.classList.remove('falling');
-          aiUnit.classList.remove('falling');
-          initSet(false);
+        if (data.isSetOver) {
+          const isGuestWon = (data.setWinner === 'GUEST');
+          showSetOutcomeUI(data.guestSetWins, data.hostSetWins, isGuestWon, () => {
+            if (data.isMatchOver) {
+              handleMatchOver(data.matchWinner === 'GUEST');
+            } else {
+              initSet(false);
+            }
+          });
         } else {
           state.round++;
           roundEl.textContent = state.round;
@@ -1305,13 +1364,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }, RESULT_MS);
     }
-  }
-
-  function handleSetOverMultiHost(data) {
-    // 별도 흰 창(alert) 없이 자연스럽게 다음 세트로 진행
-    playerUnit.classList.remove('falling');
-    aiUnit.classList.remove('falling');
-    initSet(false);
   }
 
   // --- 로비 방 목록 ---
