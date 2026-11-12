@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>낭떠러지 줄다리기 - 가위바위보 영토 대전</title>
+  <title>낭떠러지 가위바위보 - Full Edition</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,8 +20,16 @@
     <div id="screen-main" class="screen">
       <div class="main-card">
         <div class="main-logo-area">
-          <div class="main-icon">⚡</div>
-          <h1 class="main-title">낭떠러지 줄다리기</h1>
+          <!-- 강렬한 가위바위보 엠블럼 -->
+          <div class="main-rps-graphic">
+            <div class="rps-badge-orbit">
+              <div class="rps-hand-badge rps-rock" title="바위">✊</div>
+              <div class="rps-vs-bolt">⚡</div>
+              <div class="rps-hand-badge rps-scissors" title="가위">✌️</div>
+              <div class="rps-hand-badge rps-paper" title="보">🖐️</div>
+            </div>
+          </div>
+          <h1 class="main-title">낭떠러지 가위바위보</h1>
           <p class="main-subtitle">영토 점령 가위바위보 심리 대전</p>
         </div>
 
@@ -33,33 +41,40 @@
             <input type="text" id="input-nickname" maxlength="8" placeholder="닉네임을 입력하세요 (최대 8자)" autocomplete="off">
           </div>
           <div class="user-tier-info" id="user-tier-info">
-            현재 등급: <span id="tier-badge-text">새내기 도전자</span>
+            현재 등급: <span id="tier-badge-text">새내기 도전자</span> • <span id="tier-record-text">0승 0패</span>
           </div>
         </div>
 
-        <!-- 모드 선택 버튼 -->
+        <!-- 모드 및 규칙 선택 버튼 (동일 크기 3개 버튼, 가운데 정렬) -->
         <div class="mode-select-group">
           <button id="btn-mode-single" class="mode-btn btn-single">
             <span class="mode-icon">🏆</span>
             <div class="mode-texts">
               <span class="mode-name">싱글 챌린지 (1~10단계)</span>
-              <span class="mode-desc">3판 2승제 보스전 • 별/다이아 마크 획득</span>
+              <span class="mode-desc">3판 2승제 보스전 • 별/다이아 마크 도전</span>
             </div>
           </button>
 
           <button id="btn-mode-multi" class="mode-btn btn-multi">
             <span class="mode-icon">🌐</span>
             <div class="mode-texts">
-              <span class="mode-name">멀티플레이 대전 (대기실)</span>
-              <span class="mode-desc">3판 2승제 실시간 1:1 온라인 대전</span>
+              <span class="mode-name">멀티플레이 대전 (온라인)</span>
+              <span class="mode-desc">실시간 1:1 온라인 방 생성 및 대전</span>
+            </div>
+          </button>
+
+          <button id="btn-main-rules" class="mode-btn btn-rules">
+            <span class="mode-icon">📜</span>
+            <div class="mode-texts">
+              <span class="mode-name">게임 규칙 보기</span>
+              <span class="mode-desc">파워별 전진/후퇴 및 필살기 핵심 가이드</span>
             </div>
           </button>
         </div>
 
         <!-- 하단 보조 바 -->
         <div class="main-footer-bar">
-          <button id="btn-main-rules" class="sub-link-btn">📜 게임 규칙 보기</button>
-          <span class="version-tag">v2.5 Full Edition</span>
+          <span class="version-tag">낭떠러지 가위바위보 • v2.6 Edition</span>
         </div>
       </div>
     </div>
@@ -287,14 +302,63 @@
     <!-- 룰 설명 모달 -->
     <div id="rules-modal" class="modal hidden">
       <div class="modal-card rules">
-        <h2>📜 낭떠러지 줄다리기 규칙</h2>
-        <p>• <b>게임 목표:</b> 상대를 절벽으로 밀어 떨어뜨려 세트 승리를 따내세요! (3판 2승제)</p>
-        <p>• <b>파워 선택 (1판당):</b> 약파워(무제한), 중파워(7회), 강파워(5회)</p>
-        <p>• <b>무승부 후딜레이 카운터:</b> 비겼을 때는 더 적은 파워를 낸 쪽이 <b>차이만큼 상대를 밀어냅니다!</b></p>
-        <p>• <b>⚡ 필살기 (4칸):</b> 상대방이 약파워를 3회 연속 사용하면 나에게 번개 필살기(3회)가 열립니다!</p>
-        <p>• <b>시간 제한:</b> 15초 내에 결정하지 않으면 <b>약파워로 패배</b> 처리됩니다.</p>
-        <p>• <b>칭호 시스템:</b> 싱글 3단계(⭐), 5단계(⭐⭐), 8단계(⭐⭐⭐), 10단계 클리어 시 <b>💎 가위바위보 달인</b> 마크가 영구 획득됩니다!</p>
-        <button id="btn-close-rules" class="primary-btn">닫기</button>
+        <h2>📜 낭떠러지 가위바위보 규칙</h2>
+
+        <div class="rules-section">
+          <h3>🎯 게임 목표 (3판 2승제)</h3>
+          <p>가위바위보 심리전으로 상대를 밀어내어 <b>절벽(5칸) 아래로 떨어뜨리면 세트 승리!</b> 먼저 2세트를 따내는 플레이어가 최종 승리합니다.</p>
+        </div>
+
+        <div class="rules-section">
+          <h3>⚡ 1단계: 파워 선택 및 전진 / 후퇴 규칙</h3>
+          <div class="rules-table">
+            <div class="rule-row head">
+              <span>파워 종류</span>
+              <span>전진력</span>
+              <span>1판 제한</span>
+              <span>승/패/무 이동 규칙</span>
+            </div>
+            <div class="rule-row">
+              <span class="p-tag p1">🟢 약파워</span>
+              <span class="p-num">+1칸</span>
+              <span>무제한</span>
+              <span>승리 시 <b>+1칸 전진</b> / 패배 시 <b>상대 파워만큼 후퇴</b></span>
+            </div>
+            <div class="rule-row">
+              <span class="p-tag p2">🟠 중파워</span>
+              <span class="p-num">+2칸</span>
+              <span>7회</span>
+              <span>승리 시 <b>+2칸 전진</b> / 패배 시 <b>상대 파워만큼 후퇴</b></span>
+            </div>
+            <div class="rule-row">
+              <span class="p-tag p3">🔴 강파워</span>
+              <span class="p-num">+3칸</span>
+              <span>5회</span>
+              <span>승리 시 <b>+3칸 전진</b> / 패배 시 <b>상대 파워만큼 후퇴</b></span>
+            </div>
+            <div class="rule-row special">
+              <span class="p-tag p4">⚡ 필살기</span>
+              <span class="p-num">+4칸</span>
+              <span>3회</span>
+              <span>상대 3연속 약파워 시 활성화! 승리 시 <b>+4칸 대량 전진</b></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rules-section">
+          <h3>⚖️ 비겼을 때 (무승부 심리 카운터)</h3>
+          <p>• 가위바위보를 비기면 <b>더 낮은 파워를 낸 쪽이 파워 차이만큼 상대를 밀어냅니다!</b></p>
+          <div class="rule-tip">💡 예: 상대가 [강파워(3)] vs 내가 [약파워(1)]로 비기면 ➔ <b>내가 2칸 전진!</b> (파워가 같으면 이동 없음)</div>
+        </div>
+
+        <div class="rules-section">
+          <h3>⏱️ 타임아웃 & 페널티 규칙</h3>
+          <p>• <b>15초 내 미선택</b>: 약파워(1칸)로 강제 패배 처리됩니다.</p>
+          <p>• <b>게임 중도 이탈</b>: 경기 도중 나가면 <b>1패가 추가</b>됩니다.</p>
+          <p>• <b>싱글 모드</b>: 새 게임은 항상 1단계부터 시작하며, 3/5/8/10단계 클리어 시 <b>⭐ 별 및 💎 다이아 마크</b>가 영구 유지됩니다.</p>
+        </div>
+
+        <button id="btn-close-rules" class="primary-btn">확인 및 닫기</button>
       </div>
     </div>
 

@@ -1,5 +1,5 @@
 ﻿// ========================================================
-// 낭떠러지 줄다리기 가위바위보 - Full Edition Engine
+// 낭떠러지 가위바위보 - Full Edition Engine
 // 파워 횟수 제한 + 멀티 방장 시작/폭파 + Host 동기화 완벽 보장
 // ========================================================
 
@@ -48,11 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return {
           nickname: data.nickname || '',
           highestStage: data.highestStage || 1,
-          masterTitle: !!data.masterTitle
+          masterTitle: !!data.masterTitle,
+          wins: typeof data.wins === 'number' ? data.wins : 0,
+          losses: typeof data.losses === 'number' ? data.losses : 0
         };
       }
     } catch (e) { /* ignore */ }
-    return { nickname: '', highestStage: 1, masterTitle: false };
+    return { nickname: '', highestStage: 1, masterTitle: false, wins: 0, losses: 0 };
   }
 
   function saveUserProfile() {
@@ -137,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputNickname = $('input-nickname');
   const mainUserBadge = $('main-user-badge');
   const tierBadgeText = $('tier-badge-text');
+  const tierRecordText = $('tier-record-text');
   const btnModeSingle = $('btn-mode-single');
   const btnModeMulti = $('btn-mode-multi');
   const btnMainRules = $('btn-main-rules');
@@ -249,6 +252,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const badge = getBadgeMark(userProfile.highestStage, userProfile.masterTitle);
     mainUserBadge.textContent = badge;
     tierBadgeText.textContent = getTierText(userProfile.highestStage, userProfile.masterTitle);
+    if (tierRecordText) {
+      tierRecordText.textContent = `${userProfile.wins || 0}승 ${userProfile.losses || 0}패`;
+    }
   }
 
   function validateNickname() {
@@ -813,6 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (state.mode === 'SINGLE') {
       if (isPlayerWon) {
+        userProfile.wins = (userProfile.wins || 0) + 1;
         window.soundEngine.playVictory();
         modalTrophy.textContent = '🏆';
 
@@ -867,6 +874,8 @@ document.addEventListener('DOMContentLoaded', () => {
           modalActionBtns.appendChild(btnHome);
         }
       } else {
+        userProfile.losses = (userProfile.losses || 0) + 1;
+        saveUserProfile();
         window.soundEngine.playDefeat();
         modalTrophy.textContent = '💀';
         modalTitle.textContent = `${state.currentStage}단계 패배...`;
@@ -890,6 +899,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       // 멀티플레이 매치 종료
       if (isPlayerWon) {
+        userProfile.wins = (userProfile.wins || 0) + 1;
+        saveUserProfile();
         window.soundEngine.playVictory();
         modalTrophy.textContent = '🏆';
         modalTitle.textContent = '멀티 대전 최종 승리!';
@@ -897,6 +908,8 @@ document.addEventListener('DOMContentLoaded', () => {
         modalDesc.textContent = `${state.opponentNickname}님과의 3판 2승 승부에서 승리했습니다!`;
         speak('최종 승리');
       } else {
+        userProfile.losses = (userProfile.losses || 0) + 1;
+        saveUserProfile();
         window.soundEngine.playDefeat();
         modalTrophy.textContent = '💀';
         modalTitle.textContent = '멀티 대전 최종 패배';
@@ -1496,7 +1509,8 @@ document.addEventListener('DOMContentLoaded', () => {
   btnModeSingle.addEventListener('click', () => {
     if (!validateNickname()) return;
     window.soundEngine.init();
-    startSingleGame(userProfile.highestStage <= 10 ? userProfile.highestStage : 1);
+    // ★ [요구사항 3] 새 싱글 게임 시작 시 획득한 마크는 유지하되 항상 1단계부터 시작
+    startSingleGame(1);
   });
 
   btnModeMulti.addEventListener('click', () => {
@@ -1540,10 +1554,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   btnInGameExit.addEventListener('click', () => {
-    if (confirm('게임을 중단하고 나가시겠습니까?')) {
+    if (confirm('게임을 중단하고 나가시겠습니까? (중단 시 1패가 추가됩니다)')) {
       clearInterval(shuffleId);
       clearInterval(countdownId);
       clearTimeout(resultTimeoutId);
+
+      // ★ [요구사항 3] 싱글/멀티 게임 도중 나갈 시 1패 추가
+      userProfile.losses = (userProfile.losses || 0) + 1;
+      saveUserProfile();
+
       if (state.mode === 'MULTI') leaveRoomClean();
       showScreen(screenMain);
     }
