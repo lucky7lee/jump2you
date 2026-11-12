@@ -117,8 +117,130 @@ document.addEventListener('DOMContentLoaded', () => {
     roomId: null,
     opponentNickname: '',
     opponentBadge: '',
-    multiChoices: { host: null, guest: null }
+    multiChoices: { host: null, guest: null },
+
+    // 활성 인게임 진행 상태 플래그
+    isGameActive: false
   };
+
+  // 비정상 종료(창 닫기/강제 종료 등) 방지용 세션 키
+  const ACTIVE_GAME_KEY = 'jump2you_active_game_session';
+
+  // --- 인게임 세션 및 하트비트/이탈 감지 관리 ---
+  let multiHeartbeatSendTimer = null;
+  let multiHeartbeatCheckTimer = null;
+  let lastOpponentHeartbeat = Date.now();
+
+  function markGameActive(mode) {
+    state.isGameActive = true;
+    try {
+      localStorage.setItem(ACTIVE_GAME_KEY, JSON.stringify({
+        mode: mode,
+        startedAt: Date.now()
+      }));
+    } catch (e) {}
+
+    if (mode === 'MULTI') {
+      startMultiHeartbeat();
+    }
+
+    try {
+      history.pushState({ inGame: true }, '');
+    } catch (e) {}
+  }
+
+  function markGameFinished() {
+    state.isGameActive = false;
+    try {
+      localStorage.removeItem(ACTIVE_GAME_KEY);
+    } catch (e) {}
+    stopMultiHeartbeat();
+  }
+
+  function startMultiHeartbeat() {
+    stopMultiHeartbeat();
+    lastOpponentHeartbeat = Date.now();
+
+    // 2초마다 하트비트 전송
+    multiHeartbeatSendTimer = setInterval(() => {
+      if (state.isGameActive && state.mode === 'MULTI' && state.roomId) {
+        sendMqttMessage({
+          type: 'PEER_HEARTBEAT',
+          sender: state.isHost ? 'HOST' : 'GUEST'
+        });
+      }
+    }, 2000);
+
+    // 1초마다 상대방 하트비트 확인 (7초 이상 미응답 시 창닫기/강제종료 몰수승 처리)
+    multiHeartbeatCheckTimer = setInterval(() => {
+      if (state.isGameActive && state.mode === 'MULTI') {
+        if (Date.now() - lastOpponentHeartbeat > 7000) {
+          stopMultiHeartbeat();
+          handleOpponentForfeited('상대방과의 연결이 끊어졌거나 창을 닫았습니다 (비정상 종료).');
+        }
+      }
+    }, 1000);
+  }
+
+  function stopMultiHeartbeat() {
+    if (multiHeartbeatSendTimer) {
+      clearInterval(multiHeartbeatSendTimer);
+      multiHeartbeatSendTimer = null;
+    }
+    if (multiHeartbeatCheckTimer) {
+      clearInterval(multiHeartbeatCheckTimer);
+      multiHeartbeatCheckTimer = null;
+    }
+  }
+
+  // 상대방 이탈/기권 시 나의 몰수승 처리 및 대기실 자동 이동
+  function handleOpponentForfeited(reasonText) {
+    if (!state.isGameActive) return;
+    markGameFinished();
+
+    clearInterval(shuffleId);
+    clearInterval(countdownId);
+    clearTimeout(resultTimeoutId);
+
+    // 남은 사람에게 1승 추가
+    userProfile.wins = (userProfile.wins || 0) + 1;
+    saveUserProfile();
+
+    window.soundEngine.playVictory();
+    speak('상대방 기권으로 승리하였습니다');
+
+    alert(`${reasonText || '상대방이 게임을 나갔습니다.'}\n\n[몰수승] 1승이 추가되었으며 대기실로 이동합니다!`);
+
+    leaveRoomClean();
+    showScreen(screenLobby);
+  }
+
+  // 내가 게임 도중 나가기/기권할 때 (무조건 1패)
+  function handleSurrenderOrExit() {
+    if (!state.isGameActive) return;
+
+    clearInterval(shuffleId);
+    clearInterval(countdownId);
+    clearTimeout(resultTimeoutId);
+
+    // 나간 사람 무조건 1패 추가
+    userProfile.losses = (userProfile.losses || 0) + 1;
+    saveUserProfile();
+
+    if (state.mode === 'MULTI') {
+      sendMqttMessage({
+        type: 'PLAYER_FORFEIT',
+        sender: state.isHost ? 'HOST' : 'GUEST',
+        nick: userProfile.nickname
+      });
+      markGameFinished();
+      leaveRoomClean();
+      showScreen(screenLobby);
+    } else {
+      markGameFinished();
+      showScreen(screenMain);
+    }
+  }
 
   // 타이머 참조
   let shuffleId = null;
@@ -246,6 +368,19 @@ document.addEventListener('DOMContentLoaded', () => {
       userProfile.nickname = inputNickname.value.trim();
       saveUserProfile();
     });
+
+    // 비정상 종료 (강제 종료/창 닫기 등) 감지 시 1패 추가
+    try {
+      const activeSession = localStorage.getItem(ACTIVE_GAME_KEY);
+      if (activeSession) {
+        localStorage.removeItem(ACTIVE_GAME_KEY);
+        userProfile.losses = (userProfile.losses || 0) + 1;
+        saveUserProfile();
+        setTimeout(() => {
+          alert('이전 게임의 비정상 종료(창 닫기/강제 종료 등)가 감지되어 1패가 추가되었습니다.');
+        }, 500);
+      }
+    } catch (e) {}
   }
 
   function updateMainBadgeUI() {
@@ -295,6 +430,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const boundary = (mine / 10) * 100;
     playerUnit.style.left = `${Math.max(3, boundary - 5)}%`;
     aiUnit.style.left = `${Math.min(97, boundary + 5)}%`;
+
+    // ★ [요구사항] 상단 캐릭터 표정: 5칸 이상 웃는 표정(🤠), 4칸 이하 우는 표정(😭)
+    playerUnit.textContent = mine >= 5 ? '🤠' : '😭';
+
+    // 상대 캐릭터 표정 (싱글: 보스 이모지, 멀티: 상대 영토 5칸 이상 🤠, 4칸 이하 😭)
+    if (state.mode === 'SINGLE') {
+      const stg = SINGLE_STAGES[state.currentStage - 1];
+      aiUnit.textContent = stg ? stg.emoji : '🤖';
+    } else {
+      const oppTerritory = 10 - mine;
+      aiUnit.textContent = oppTerritory >= 5 ? '🤠' : '😭';
+    }
   }
 
   // ---------- ★ [요구사항 2] 3판 2승제 상황표 (아이디 한 줄 깔끔 처리) ----------
@@ -487,7 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.setWinsPlayer = 0;
     state.setWinsOpponent = 0;
     state.setHistory = [];
-
+    markGameActive('SINGLE');
     initSet(true);
   }
 
@@ -813,6 +960,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 매치 최종 종료 모달
   function handleMatchOver(isPlayerWon) {
+    markGameFinished();
     state.phase = 'MATCH_OVER';
     overlay.classList.add('hidden');
     modalActionBtns.innerHTML = '';
@@ -1043,22 +1191,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
         case 'GUEST_LEFT':
           if (state.isHost) {
-            alert('참여자가 방을 나갔습니다.');
-            stopHostAutoStartCountdown();
-            state.opponentNickname = '';
-            waitGuestName.textContent = '유저 대기 중...';
-            waitGuestAvatar.textContent = '⏳';
-            btnHostStartGame.classList.add('hidden');
-            waitStatusMsg.textContent = '다른 플레이어의 입장을 기다리고 있습니다...';
+            if (state.isGameActive) {
+              handleOpponentForfeited('참여자가 게임 도중 나갔습니다.');
+            } else {
+              alert('참여자가 방을 나갔습니다.');
+              stopHostAutoStartCountdown();
+              state.opponentNickname = '';
+              waitGuestName.textContent = '유저 대기 중...';
+              waitGuestAvatar.textContent = '⏳';
+              btnHostStartGame.classList.add('hidden');
+              waitStatusMsg.textContent = '다른 플레이어의 입장을 기다리고 있습니다...';
+            }
           }
           break;
 
         // ★ [요구사항 4] 방장이 나가서 방이 폭파되었을 때 게스트 강제 퇴장
         case 'ROOM_CLOSED':
           if (!state.isHost) {
-            alert('방장이 방을 나가 방이 사라졌습니다. 대기실로 이동합니다.');
-            leaveRoomClean();
-            showScreen(screenLobby);
+            if (state.isGameActive) {
+              handleOpponentForfeited('방장이 게임 도중 방을 나가 방이 사라졌습니다.');
+            } else {
+              alert('방장이 방을 나가 방이 사라졌습니다. 대기실로 이동합니다.');
+              leaveRoomClean();
+              showScreen(screenLobby);
+            }
+          }
+          break;
+
+        case 'PLAYER_FORFEIT':
+          // 상대방이 기권/이탈/창 닫기 등
+          if ((state.isHost && data.sender === 'GUEST') || (!state.isHost && data.sender === 'HOST')) {
+            handleOpponentForfeited(`${data.nick || '상대방'}님이 게임을 중단하고 나갔습니다.`);
+          }
+          break;
+
+        case 'PEER_HEARTBEAT':
+          if ((state.isHost && data.sender === 'GUEST') || (!state.isHost && data.sender === 'HOST')) {
+            lastOpponentHeartbeat = Date.now();
           }
           break;
 
@@ -1073,6 +1242,7 @@ document.addEventListener('DOMContentLoaded', () => {
             state.setWinsPlayer = 0;
             state.setWinsOpponent = 0;
             state.setHistory = [];
+            markGameActive('MULTI');
             initSet(true);
           }
           break;
@@ -1134,6 +1304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.setWinsPlayer = 0;
     state.setWinsOpponent = 0;
     state.setHistory = [];
+    markGameActive('MULTI');
     initSet(true);
   }
 
@@ -1555,16 +1726,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnInGameExit.addEventListener('click', () => {
     if (confirm('게임을 중단하고 나가시겠습니까? (중단 시 1패가 추가됩니다)')) {
-      clearInterval(shuffleId);
-      clearInterval(countdownId);
-      clearTimeout(resultTimeoutId);
-
-      // ★ [요구사항 3] 싱글/멀티 게임 도중 나갈 시 1패 추가
-      userProfile.losses = (userProfile.losses || 0) + 1;
-      saveUserProfile();
-
-      if (state.mode === 'MULTI') leaveRoomClean();
-      showScreen(screenMain);
+      handleSurrenderOrExit();
     }
   });
 
@@ -1590,6 +1752,46 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   btnCloseRules.addEventListener('click', () => rulesModal.classList.add('hidden'));
+
+  // 브라우저 닫기/새로고침/뒤로가기/비정상 종료 방어 리스너
+  window.addEventListener('beforeunload', () => {
+    if (state.isGameActive) {
+      userProfile.losses = (userProfile.losses || 0) + 1;
+      try {
+        localStorage.setItem(USER_KEY, JSON.stringify(userProfile));
+        localStorage.removeItem(ACTIVE_GAME_KEY);
+      } catch (e) {}
+      if (state.mode === 'MULTI' && mqttClient && mqttClient.isConnected()) {
+        try {
+          sendMqttMessage({
+            type: 'PLAYER_FORFEIT',
+            sender: state.isHost ? 'HOST' : 'GUEST',
+            nick: userProfile.nickname
+          });
+        } catch (e) {}
+      }
+    }
+  });
+
+  window.addEventListener('pagehide', () => {
+    if (state.isGameActive) {
+      userProfile.losses = (userProfile.losses || 0) + 1;
+      try {
+        localStorage.setItem(USER_KEY, JSON.stringify(userProfile));
+        localStorage.removeItem(ACTIVE_GAME_KEY);
+      } catch (e) {}
+    }
+  });
+
+  window.addEventListener('popstate', () => {
+    if (state.isGameActive) {
+      if (confirm('게임을 중단하고 뒤로 가시겠습니까? (중단 시 1패가 추가됩니다)')) {
+        handleSurrenderOrExit();
+      } else {
+        history.pushState({ inGame: true }, '');
+      }
+    }
+  });
 
   // 초기화 실행
   initTiles();
