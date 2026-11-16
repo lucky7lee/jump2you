@@ -290,6 +290,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const tilesEl = $('tiles-container');
   const playerUnit = $('player-unit');
   const aiUnit = $('ai-unit');
+  const bustPlayer = $('bust-player');
+  const bustPlayerSvg = $('bust-player-svg');
+  const impactPlayer = $('impact-player');
+  const bustAi = $('bust-ai');
+  const bustAiSvg = $('bust-ai-svg');
+  const impactAi = $('impact-ai');
+  const flyingFist = $('flying-fist');
   const timerWrap = $('timer-wrap');
   const timerFill = $('timer-bar-fill');
   const timerSec = $('timer-seconds');
@@ -417,7 +424,368 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function updateBoard() {
+  // ---------- 상반신(얼굴 강조) 캐릭터 SVG 생성기 (땅 개수 0~10칸별 상처/깨끗함 단계 변형) ----------
+  function buildFighterBustSVG(side, tiles) {
+    const isPlayer = side === 'PLAYER';
+    const mainColor = isPlayer ? '#e53935' : '#1e88e5';
+    const subColor = isPlayer ? '#ff8a80' : '#82b1ff';
+    const hairColor = isPlayer ? '#2b1b17' : '#1a237e';
+
+    // 피부 톤: 땅을 많이 점령할수록(6~10칸) 뽀얗고 화사해지며, 5칸 이하로 뺏길수록 붉고 푸르스름하게 멍듦
+    let skinFill = '#ffccaa';
+    let skinStroke = '#d88c60';
+    if (tiles >= 8) {
+      skinFill = '#ffe5cf';
+      skinStroke = '#e59866';
+    } else if (tiles >= 6) {
+      skinFill = '#ffd7ba';
+      skinStroke = '#dc8e5e';
+    } else if (tiles === 4) {
+      skinFill = '#f5bca0';
+    } else if (tiles === 3) {
+      skinFill = '#ebaa94';
+    } else if (tiles === 2) {
+      skinFill = '#df968c';
+    } else if (tiles <= 1) {
+      skinFill = '#cf8488';
+    }
+
+    // 배경 오라 (6칸 이상 점령할수록 깨끗한 광채 증가, 4칸 이하는 어두운 위기감)
+    let bgAura = '';
+    if (tiles >= 6) {
+      const auraOpacity = Math.min(0.85, 0.2 + (tiles - 5) * 0.13);
+      bgAura = `
+        <circle cx="50" cy="48" r="${36 + (tiles - 5) * 2}" fill="rgba(255, 215, 0, ${auraOpacity * 0.45})" />
+        ${tiles >= 9 ? `<circle cx="50" cy="48" r="44" fill="none" stroke="#ffd600" stroke-width="2.5" stroke-dasharray="6 4" opacity="0.85"/>` : ''}
+      `;
+    } else if (tiles <= 4) {
+      const dangerOp = Math.min(0.65, (5 - tiles) * 0.14);
+      bgAura = `<circle cx="50" cy="48" r="43" fill="rgba(183, 28, 28, ${dangerOp})" />`;
+    }
+
+    // 상처/멍/반창고/혹 레이어 (5칸 이하에서 땅을 뺏길 때마다 단계별로 상처가 늘어남!)
+    let woundsLayer = '';
+    if (tiles <= 5) {
+      // 5칸: 기본 대치 중 미세한 먼지/찰과상 1줄 (6칸 이상 점령 시 완전히 사라져 깨끗해짐)
+      woundsLayer += `
+        <path d="M28 52 L34 50 M29 55 L35 53" stroke="#8d493a" stroke-width="1.4" stroke-linecap="round" opacity="0.75"/>
+      `;
+    }
+    if (tiles <= 4) {
+      // 4칸: 볼에 보라색 멍 시작 + 반창고 1개 + 식은땀
+      woundsLayer += `
+        <ellipse cx="32" cy="54" rx="7" ry="4.5" fill="rgba(123, 31, 162, 0.35)" />
+        <g transform="rotate(-18 31 54)">
+          <rect x="24" y="51" width="14" height="6" rx="2" fill="#f5deb3" stroke="#a1887f" stroke-width="1"/>
+          <line x1="29" y1="51" x2="29" y2="57" stroke="#d7ccc8" stroke-width="1"/>
+          <line x1="33" y1="51" x2="33" y2="57" stroke="#d7ccc8" stroke-width="1"/>
+        </g>
+        <path d="M21 34 Q18 40 21 43 Q24 40 21 34 Z" fill="#4fc3f7" stroke="#0288d1" stroke-width="0.8"/>
+      `;
+    }
+    if (tiles <= 3) {
+      // 3칸: 이마 십자(+) 반창고 추가 + 턱/볼 찰과상 증가 + 붉은 부기
+      woundsLayer += `
+        <ellipse cx="64" cy="55" rx="6.5" ry="4.5" fill="rgba(211, 47, 47, 0.42)" />
+        <g transform="translate(33, 25) rotate(12)">
+          <rect x="-7" y="-2.5" width="14" height="5" rx="1.5" fill="#fff8e1" stroke="#8d6e63" stroke-width="1"/>
+          <rect x="-2.5" y="-7" width="5" height="14" rx="1.5" fill="#fff8e1" stroke="#8d6e63" stroke-width="1"/>
+        </g>
+        <path d="M58 63 L65 61 M60 66 L66 64" stroke="#6d1b1b" stroke-width="1.6" stroke-linecap="round"/>
+      `;
+    }
+    if (tiles <= 2) {
+      // 2칸: 시퍼런 눈탱이 밤탱이(블랙아이) + 머리 위 큰 혹 1개 + 눈물 줄기
+      woundsLayer += `
+        <ellipse cx="61" cy="41" rx="8.5" ry="6.5" fill="rgba(74, 20, 140, 0.52)" />
+        <circle cx="38" cy="12" r="7.5" fill="#ef5350" stroke="#b71c1c" stroke-width="1.5"/>
+        <path d="M35 8 Q38 5 42 8" stroke="#ffcdd2" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M40 46 Q37 56 39 65" stroke="#29b6f6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M63 46 Q66 56 64 65" stroke="#29b6f6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      `;
+    }
+    if (tiles <= 1) {
+      // 1칸(벼랑 끝 만신창이): 양쪽 눈 시퍼런 멍 + 쌍혹 + 코피 주르륵 + 온 얼굴 상처투성이
+      woundsLayer += `
+        <ellipse cx="42" cy="41" rx="8" ry="6" fill="rgba(49, 27, 146, 0.55)" />
+        <circle cx="51" cy="10" r="6.5" fill="#e53935" stroke="#8e0000" stroke-width="1.5"/>
+        <path d="M55 49 L55 62 Q55 65 53 65" stroke="#d50000" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M44 57 L50 54 M45 60 L51 57" stroke="#4e342e" stroke-width="1.6" stroke-linecap="round"/>
+      `;
+    }
+    if (tiles === 0) {
+      // 0칸(완전 패배 K.O.): 머리 위 빙글빙글 별
+      woundsLayer += `
+        <text x="22" y="16" font-size="12">⭐</text>
+        <text x="58" y="15" font-size="12">💫</text>
+      `;
+    }
+
+    // 깨끗함 & 광채 레이어 (6칸 이상 땅을 점령할수록 얼굴이 점점 깨끗해지고 반짝이는 효과)
+    let cleanShineLayer = '';
+    if (tiles >= 6) {
+      // 6칸 이상: 뺨의 뽀얀 윤기 하이라이트
+      cleanShineLayer += `
+        <ellipse cx="34" cy="49" rx="5.5" ry="3" fill="rgba(255, 255, 255, 0.55)" transform="rotate(-15 34 49)"/>
+        <ellipse cx="64" cy="49" rx="4.5" ry="2.5" fill="rgba(255, 138, 128, 0.35)"/>
+      `;
+    }
+    if (tiles >= 7) {
+      // 7칸: 반짝이 스파클 1개 + 이마 광택
+      cleanShineLayer += `
+        <ellipse cx="48" cy="29" rx="9" ry="3" fill="rgba(255, 255, 255, 0.45)"/>
+        <path d="M78 22 L80 27 L85 29 L80 31 L78 36 L76 31 L71 29 L76 27 Z" fill="#ffd600"/>
+      `;
+    }
+    if (tiles >= 8) {
+      // 8칸: 반짝이 스파클 2개
+      cleanShineLayer += `
+        <path d="M18 24 L20 28 L24 30 L20 32 L18 36 L16 32 L12 30 L16 28 Z" fill="#fff59d"/>
+      `;
+    }
+    if (tiles >= 9) {
+      // 9칸: 반짝이 스파클 3개 + 황금빛 아우라
+      cleanShineLayer += `
+        <path d="M82 50 L83.5 54 L87.5 55.5 L83.5 57 L82 61 L80.5 57 L76.5 55.5 L80.5 54 Z" fill="#ffd600"/>
+      `;
+    }
+    if (tiles >= 10) {
+      // 10칸(완전 정복): 무결점 챔피언 왕관/후광 스파클
+      cleanShineLayer += `
+        <polygon points="36,14 42,4 48,11 54,4 60,14" fill="#ffd600" stroke="#ff6f00" stroke-width="1.2"/>
+      `;
+    }
+
+    // 눈 & 눈썹 (오른쪽 상대를 정면으로 응시하도록 배치)
+    let eyesLayer = '';
+    if (tiles === 0) {
+      // K.O. 눈 (X _ X)
+      eyesLayer = `
+        <path d="M38 38 L46 46 M46 38 L38 46" stroke="#212121" stroke-width="2.8" stroke-linecap="round"/>
+        <path d="M57 38 L65 46 M65 38 L57 46" stroke="#212121" stroke-width="2.8" stroke-linecap="round"/>
+      `;
+    } else if (tiles <= 2) {
+      // 고통스럽게 질끈 감거나 눈물 고인 눈
+      eyesLayer = `
+        <path d="M36 39 L46 42 L36 45" stroke="#212121" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M66 39 L56 42 L66 45" stroke="#212121" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M34 34 L46 37" stroke="#3e2723" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M67 34 L56 37" stroke="#3e2723" stroke-width="2.5" stroke-linecap="round"/>
+      `;
+    } else if (tiles <= 4) {
+      // 찡그린 긴장 눈
+      eyesLayer = `
+        <ellipse cx="42" cy="41" rx="4" ry="4.2" fill="#fff" stroke="#212121" stroke-width="1.5"/>
+        <circle cx="43.5" cy="41" r="2.2" fill="#111"/>
+        <ellipse cx="61" cy="41" rx="4" ry="4.2" fill="#fff" stroke="#212121" stroke-width="1.5"/>
+        <circle cx="62.5" cy="41" r="2.2" fill="#111"/>
+        <path d="M35 35 L47 38" stroke="#2b1b17" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M67 35 L55 38" stroke="#2b1b17" stroke-width="2.6" stroke-linecap="round"/>
+      `;
+    } else if (tiles >= 8) {
+      // 의기양양 초롱초롱 빛나는 눈
+      eyesLayer = `
+        <ellipse cx="42" cy="40" rx="4.5" ry="5.2" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <circle cx="44" cy="40" r="2.8" fill="#111"/>
+        <circle cx="45" cy="38.5" r="1.2" fill="#fff"/>
+        <ellipse cx="61" cy="40" rx="4.5" ry="5.2" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <circle cx="63" cy="40" r="2.8" fill="#111"/>
+        <circle cx="64" cy="38.5" r="1.2" fill="#fff"/>
+        <path d="M35 33 Q42 30 47 34" stroke="#2b1b17" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+        <path d="M55 34 Q61 30 67 33" stroke="#2b1b17" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+      `;
+    } else {
+      // 5~7칸: 결의에 찬 매서운 파이터 눈매
+      eyesLayer = `
+        <ellipse cx="42" cy="41" rx="4.2" ry="4.6" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <circle cx="44" cy="41" r="2.5" fill="#111"/>
+        <circle cx="44.8" cy="39.8" r="1" fill="#fff"/>
+        <ellipse cx="61" cy="41" rx="4.2" ry="4.6" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <circle cx="63" cy="41" r="2.5" fill="#111"/>
+        <circle cx="63.8" cy="39.8" r="1" fill="#fff"/>
+        <path d="M35 34 L47 37" stroke="#2b1b17" stroke-width="2.8" stroke-linecap="round"/>
+        <path d="M67 34 L55 37" stroke="#2b1b17" stroke-width="2.8" stroke-linecap="round"/>
+      `;
+    }
+
+    // 입 모양 (점령할수록 환한 미소, 뺏길수록 일그러지고 절규)
+    let mouthLayer = '';
+    if (tiles >= 8) {
+      // 활짝 웃는 승리 미소 (하얀 치아 반짝)
+      mouthLayer = `
+        <path d="M40 53 Q52 65 62 53 Z" fill="#b71c1c" stroke="#111" stroke-width="1.6"/>
+        <path d="M42 54 Q52 59 60 54 Z" fill="#ffffff"/>
+      `;
+    } else if (tiles >= 6) {
+      // 자신감 넘치는 깨끗한 미소
+      mouthLayer = `
+        <path d="M42 55 Q52 62 61 54" stroke="#111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      `;
+    } else if (tiles === 5) {
+      // 꽉 다문 결의의 입
+      mouthLayer = `
+        <rect x="43" y="54" width="16" height="5" rx="2" fill="#fff" stroke="#111" stroke-width="1.5"/>
+        <line x1="43" y1="56.5" x2="59" y2="56.5" stroke="#111" stroke-width="1.2"/>
+      `;
+    } else if (tiles === 4) {
+      // 흔들리는 입
+      mouthLayer = `
+        <path d="M42 58 Q47 54 52 58 Q57 62 61 57" stroke="#111" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      `;
+    } else if (tiles >= 2) {
+      // 고통스럽게 벌린 입
+      mouthLayer = `
+        <ellipse cx="52" cy="58" rx="8" ry="5.5" fill="#7f0000" stroke="#111" stroke-width="1.6"/>
+        <path d="M46 54 L58 54" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+      `;
+    } else {
+      // 0~1칸: 대성통곡 절규 입 + 퉁퉁 부은 입술
+      mouthLayer = `
+        <path d="M41 61 Q52 50 62 61 Z" fill="#880e4f" stroke="#111" stroke-width="1.8"/>
+        <ellipse cx="52" cy="61" rx="5" ry="3" fill="#ff80ab"/>
+      `;
+    }
+
+    return `
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        ${bgAura}
+        <!-- 상반신 도복/어깨 -->
+        <path d="M12 98 C14 77 30 72 50 72 C70 72 84 78 88 98 Z" fill="${mainColor}" stroke="#111" stroke-width="2.2"/>
+        <path d="M36 72 L50 88 L64 72" fill="none" stroke="${subColor}" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- 머리띠 리본 (뒤쪽 날림) -->
+        <path d="M20 26 L6 20 L10 29 L5 35 L21 32 Z" fill="${mainColor}" stroke="#111" stroke-width="1.4"/>
+        <!-- 귀 -->
+        <ellipse cx="21" cy="45" rx="5" ry="7" fill="${skinFill}" stroke="${skinStroke}" stroke-width="1.8"/>
+        <!-- 얼굴 본체 (얼굴 강조 대구경 헤드) -->
+        <ellipse cx="49" cy="44" rx="28" ry="27" fill="${skinFill}" stroke="#111" stroke-width="2.2"/>
+        <!-- 머리카락 & 전투 머리띠 -->
+        <path d="M21 32 C22 14 40 9 56 11 C70 12 79 20 77 32 C68 25 35 25 21 32 Z" fill="${hairColor}" stroke="#111" stroke-width="1.8"/>
+        <path d="M21 27 Q50 22 77 28 L76 34 Q50 28 21 33 Z" fill="${mainColor}" stroke="#111" stroke-width="1.5"/>
+        <!-- 코 (오른쪽을 향함) -->
+        <path d="M53 43 L58 47 L52 49" fill="none" stroke="#8d493a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- 눈 & 입 -->
+        ${eyesLayer}
+        ${mouthLayer}
+        <!-- 상처/멍 또는 깨끗함/광채 레이어 -->
+        ${woundsLayer}
+        ${cleanShineLayer}
+        <!-- 전면 파이터 가드 주먹 (상반신 입체감) -->
+        <circle cx="80" cy="79" r="10" fill="${skinFill}" stroke="#111" stroke-width="2.2"/>
+        <path d="M74 75 L85 75 M74 79 L85 79 M74 83 L85 83" stroke="#8d493a" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    `;
+  }
+
+  // 날아가는 주먹 프로젝타일 SVG (파워 단계별 불꽃/번개 이펙트)
+  function buildFlyingFistSVG(power, isPlayerAttacking) {
+    const auraColor = power >= 4 ? '#00e5ff' : (isPlayerAttacking ? '#ff1744' : '#2979ff');
+    const flameColor = power >= 4 ? '#e040fb' : (isPlayerAttacking ? '#ffd600' : '#00e5ff');
+    return `
+      <svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg">
+        <!-- 뒤쪽 스피드 라인 & 충격파 꼬리 -->
+        <path d="M4 45 L45 25 L38 45 L45 65 Z" fill="${flameColor}" opacity="0.85"/>
+        <path d="M18 20 L65 12 C95 12 114 26 114 45 C114 64 95 78 65 78 L18 70 L34 45 Z" fill="${auraColor}" opacity="0.9"/>
+        <line x1="2" y1="26" x2="36" y2="26" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="0" y1="45" x2="30" y2="45" stroke="#ffd600" stroke-width="4.5" stroke-linecap="round"/>
+        <line x1="2" y1="64" x2="36" y2="64" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- 거대 주먹 본체 -->
+        <rect x="46" y="22" width="56" height="46" rx="14" fill="#ffccaa" stroke="#111" stroke-width="3.5"/>
+        <!-- 손가락 마디 입체 표현 -->
+        <rect x="86" y="23" width="16" height="11" rx="5" fill="#ffb085" stroke="#111" stroke-width="2.5"/>
+        <rect x="88" y="34" width="16" height="11" rx="5" fill="#ffb085" stroke="#111" stroke-width="2.5"/>
+        <rect x="88" y="45" width="16" height="11" rx="5" fill="#ffb085" stroke="#111" stroke-width="2.5"/>
+        <rect x="85" y="56" width="15" height="11" rx="5" fill="#ffb085" stroke="#111" stroke-width="2.5"/>
+        <!-- 엄지손가락 -->
+        <path d="M58 66 C58 55 78 55 82 66 C82 73 58 73 58 66 Z" fill="#f5a97f" stroke="#111" stroke-width="2.8"/>
+        <!-- 주먹 전면 하이라이트 광택 -->
+        <path d="M56 29 L78 29" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+      </svg>
+    `;
+  }
+
+  // 타격 순간 맞는 얼굴 위에 터지는 코믹 폭발 이펙트 SVG
+  function buildImpactBurstSVG(power) {
+    const outerColor = power >= 4 ? '#e040fb' : '#ff1744';
+    return `
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,2 61,26 88,11 75,37 98,50 74,63 88,89 61,74 50,98 39,74 12,89 26,63 2,50 25,37 12,11 39,26"
+                 fill="${outerColor}" stroke="#ffffff" stroke-width="2.5"/>
+        <polygon points="50,16 58,34 78,24 67,42 84,50 67,58 78,76 58,66 50,84 42,66 22,76 33,58 16,50 33,42 22,24 42,34"
+                 fill="#ffd600"/>
+        <circle cx="50" cy="50" r="14" fill="#ffffff"/>
+      </svg>
+    `;
+  }
+
+  // 양쪽 상반신 포트레이트 상태 업데이트
+  function updateBustPortraits(mine) {
+    const oppTerritory = 10 - mine;
+    if (bustPlayerSvg) {
+      bustPlayerSvg.innerHTML = buildFighterBustSVG('PLAYER', mine);
+    }
+    if (bustAiSvg) {
+      bustAiSvg.innerHTML = buildFighterBustSVG('AI', oppTerritory);
+    }
+    if (bustPlayer) {
+      bustPlayer.classList.toggle('clean-glow', mine >= 6);
+      bustPlayer.classList.toggle('danger-bruised', mine <= 4);
+    }
+    if (bustAi) {
+      bustAi.classList.toggle('clean-glow', oppTerritory >= 6);
+      bustAi.classList.toggle('danger-bruised', oppTerritory <= 4);
+    }
+  }
+
+  // 이긴 상반신 캐릭터에서 진 상반신 캐릭터로 주먹이 날아가 때리는 애니메이션
+  let punchAnimTimeoutId = null;
+  function triggerPunchAnimation(delta, power = 1) {
+    if (!delta || !flyingFist) return;
+    clearTimeout(punchAnimTimeoutId);
+
+    const isPlayerWin = delta > 0;
+    const attackerBust = isPlayerWin ? bustPlayer : bustAi;
+    const victimBust = isPlayerWin ? bustAi : bustPlayer;
+    const victimImpact = isPlayerWin ? impactAi : impactPlayer;
+
+    // 기존 애니메이션 클래스 초기화
+    [bustPlayer, bustAi].forEach(el => {
+      if (el) el.classList.remove('bust-attacking', 'bust-hit');
+    });
+    [impactPlayer, impactAi].forEach(el => {
+      if (el) el.classList.add('hidden');
+    });
+    flyingFist.classList.remove('hidden', 'fly-to-right', 'fly-to-left');
+
+    // 1. 공격자 상반신 돌진 모션 & 주먹 발사
+    void flyingFist.offsetWidth;
+    if (attackerBust) attackerBust.classList.add('bust-attacking');
+
+    flyingFist.innerHTML = buildFlyingFistSVG(power, isPlayerWin);
+    flyingFist.classList.add(isPlayerWin ? 'fly-to-right' : 'fly-to-left');
+
+    // 2. 주먹이 상대 얼굴에 도달하는 순간(240ms) 타격 폭발 & 상처 업데이트!
+    punchAnimTimeoutId = setTimeout(() => {
+      flyingFist.classList.add('hidden');
+      window.soundEngine.playPunchImpact(power);
+
+      if (victimBust) {
+        victimBust.classList.remove('bust-hit');
+        void victimBust.offsetWidth;
+        victimBust.classList.add('bust-hit');
+      }
+      if (victimImpact) {
+        victimImpact.innerHTML = buildImpactBurstSVG(power);
+        victimImpact.classList.remove('hidden');
+        setTimeout(() => victimImpact.classList.add('hidden'), 460);
+      }
+
+      // 맞는 순간 땅 개수에 맞춰 패자는 상처가 늘어나고 승자는 깨끗해짐!
+      const mine = Math.max(0, Math.min(10, 5 + state.pos));
+      updateBustPortraits(mine);
+    }, 240);
+  }
+
+  function updateBoard(deferBustToPunch = false) {
     const mine = Math.max(0, Math.min(10, 5 + state.pos));
     territoryEl.textContent = `🔴 ${mine} : ${10 - mine} 🔵`;
 
@@ -441,6 +809,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       const oppTerritory = 10 - mine;
       aiUnit.textContent = oppTerritory >= 5 ? '🤠' : '😭';
+    }
+
+    if (!deferBustToPunch) {
+      updateBustPortraits(mine);
     }
   }
 
@@ -869,7 +1241,13 @@ document.addEventListener('DOMContentLoaded', () => {
       window.soundEngine.playEqualDraw();
     }
 
-    updateBoard();
+    if (delta !== 0) {
+      updateBoard(true);
+      const hitPower = delta > 0 ? Math.max(pBet, Math.abs(delta)) : Math.max(aBet, Math.abs(delta));
+      triggerPunchAnimation(delta, hitPower);
+    } else {
+      updateBoard(false);
+    }
     setTimeout(() => speak(label.replace('!', '')), 200);
   }
 

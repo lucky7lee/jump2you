@@ -165,17 +165,26 @@
         </div>
       </header>
 
-      <!-- 10칸 영토 무대 (깃발 없음) -->
-      <section class="stage">
-        <div class="cliff cliff-left">💀</div>
-        <div class="track">
+      <!-- 10칸 영토 무대 (양쪽 상반신 캐릭터 마주보기 & 주먹 타격 애니메이션) -->
+      <section class="stage" id="battle-stage">
+        <div class="bust-portrait bust-left" id="bust-player" title="내 캐릭터 상태">
+          <div class="bust-inner" id="bust-player-svg"></div>
+          <div class="bust-impact-fx hidden" id="impact-player"></div>
+        </div>
+        <div class="track" id="stage-track">
           <div class="tiles" id="tiles-container"></div>
           <div class="chars">
             <div class="char" id="player-unit">🤠</div>
             <div class="char" id="ai-unit">🤖</div>
           </div>
+          <div class="punch-layer" id="punch-layer">
+            <div class="flying-fist hidden" id="flying-fist"></div>
+          </div>
         </div>
-        <div class="cliff cliff-right">💀</div>
+        <div class="bust-portrait bust-right" id="bust-ai" title="상대 캐릭터 상태">
+          <div class="bust-inner" id="bust-ai-svg"></div>
+          <div class="bust-impact-fx hidden" id="impact-ai"></div>
+        </div>
       </section>
 
       <!-- 타이머 (15초 결정 시간에만 표시) -->

@@ -412,6 +412,48 @@ class SoundController {
     osc1.start(now);
     osc1.stop(now + 0.5);
   }
+
+  // 👊 주먹 날아와 얼굴 가격 시 타격음 (퍽!/콰앙!)
+  playPunchImpact(power = 1) {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+
+    // 1. 묵직한 타격 저음 (펀치 임팩트)
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    const baseFreq = power >= 3 ? 180 : 140;
+    const dur = 0.14 + power * 0.04;
+    osc.frequency.setValueAtTime(baseFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(28, now + dur);
+
+    gain.gain.setValueAtTime(Math.min(0.45, 0.22 + power * 0.06), now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + dur);
+
+    // 2. 타격 파열음 (노이즈 버스트)
+    const bufferSize = this.ctx.sampleRate * 0.09;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.35));
+    }
+    const noise = this.ctx.createBufferSource();
+    const nGain = this.ctx.createGain();
+    noise.buffer = buffer;
+    nGain.gain.setValueAtTime(Math.min(0.35, 0.15 + power * 0.05), now);
+    nGain.gain.exponentialRampToValueAtTime(0.01, now + 0.09);
+    noise.connect(nGain);
+    nGain.connect(this.ctx.destination);
+    noise.start(now);
+  }
 }
 
 window.soundEngine = new SoundController();
