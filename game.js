@@ -1444,12 +1444,47 @@ document.addEventListener('DOMContentLoaded', () => {
         speak('최종 패배');
       }
 
-      // ★ [요구사항] 대기실로 돌아가기 & 메인화면으로 돌아가기
+      // ★ [요구사항] 멀티 게임 종료 후 선택 메뉴: 1. 재대결(30초 제한) / 2. 대기실로 돌아가기 / 3. 메인화면으로 돌아가기
+      stopRematchCountdown();
+      rematchSec = 30;
+      rematchMyReady = false;
+      rematchPeerReady = false;
+
+      const btnRematch = document.createElement('button');
+      btnRematch.className = 'primary-btn';
+      rematchBtnEl = btnRematch;
+      updateRematchButtonUI();
+
+      btnRematch.onclick = () => {
+        if (rematchMyReady) return;
+        rematchMyReady = true;
+        updateRematchButtonUI();
+
+        sendMqttMessage({
+          type: 'REMATCH_REQUEST',
+          sender: state.isHost ? 'HOST' : 'GUEST',
+          nick: userProfile.nickname
+        });
+
+        if (rematchPeerReady) {
+          sendMqttMessage({ type: 'REMATCH_START' });
+          startMultiRematchGame();
+        } else {
+          modalDesc.textContent = '재대결을 신청했습니다! 상대방이 재대결을 선택하면 즉시 시작됩니다.';
+        }
+      };
+
       const btnToLobby = document.createElement('button');
-      btnToLobby.className = 'primary-btn';
+      btnToLobby.className = 'secondary-btn';
       btnToLobby.textContent = '대기실로 돌아가기 🌐';
       btnToLobby.onclick = () => {
+        stopRematchCountdown();
+        state.phase = 'IDLE';
         gameoverModal.classList.add('hidden');
+        sendMqttMessage({
+          type: 'POST_MATCH_EXIT',
+          sender: state.isHost ? 'HOST' : 'GUEST'
+        });
         leaveRoomClean();
         showScreen(screenLobby);
       };
@@ -1458,16 +1493,100 @@ document.addEventListener('DOMContentLoaded', () => {
       btnToMain.className = 'secondary-btn';
       btnToMain.textContent = '메인화면으로 돌아가기 🏠';
       btnToMain.onclick = () => {
+        stopRematchCountdown();
+        state.phase = 'IDLE';
         gameoverModal.classList.add('hidden');
+        sendMqttMessage({
+          type: 'POST_MATCH_EXIT',
+          sender: state.isHost ? 'HOST' : 'GUEST'
+        });
         leaveRoomClean();
         showScreen(screenMain);
       };
 
+      modalActionBtns.appendChild(btnRematch);
       modalActionBtns.appendChild(btnToLobby);
       modalActionBtns.appendChild(btnToMain);
+
+      // 30초 안에 재대결이 성사되지 않으면 둘 다 자동으로 대기실로 이동
+      rematchTimer = setInterval(() => {
+        rematchSec--;
+        updateRematchButtonUI();
+        if (rematchSec <= 0) {
+          stopRematchCountdown();
+          if (state.phase === 'MATCH_OVER') {
+            state.phase = 'IDLE';
+            gameoverModal.classList.add('hidden');
+            sendMqttMessage({
+              type: 'POST_MATCH_EXIT',
+              sender: state.isHost ? 'HOST' : 'GUEST'
+            });
+            leaveRoomClean();
+            showScreen(screenLobby);
+          }
+        }
+      }, 1000);
     }
 
     gameoverModal.classList.remove('hidden');
+  }
+
+  // --- 멀티플레이 재대결(30초 카운트다운 & 즉시 재시작 & 상대 퇴장 시 자동 대기실 복귀) ---
+  let rematchTimer = null;
+  let rematchSec = 30;
+  let rematchMyReady = false;
+  let rematchPeerReady = false;
+  let rematchBtnEl = null;
+
+  function stopRematchCountdown() {
+    if (rematchTimer) {
+      clearInterval(rematchTimer);
+      rematchTimer = null;
+    }
+    rematchMyReady = false;
+    rematchPeerReady = false;
+    rematchBtnEl = null;
+  }
+
+  function updateRematchButtonUI() {
+    if (!rematchBtnEl) return;
+    if (rematchMyReady) {
+      rematchBtnEl.textContent = `⏳ 상대방 선택 대기 중... (${rematchSec}초)`;
+      rematchBtnEl.disabled = true;
+      rematchBtnEl.style.opacity = '0.8';
+    } else if (rematchPeerReady) {
+      rematchBtnEl.textContent = `🔥 재대결 수락하기 (${rematchSec}초) - 상대 대기중!`;
+      rematchBtnEl.disabled = false;
+      rematchBtnEl.style.opacity = '1';
+    } else {
+      rematchBtnEl.textContent = `🔄 재대결 하기 (${rematchSec}초)`;
+      rematchBtnEl.disabled = false;
+      rematchBtnEl.style.opacity = '1';
+    }
+  }
+
+  function startMultiRematchGame() {
+    if (state.isGameActive) return;
+    stopRematchCountdown();
+    gameoverModal.classList.add('hidden');
+
+    state.mode = 'MULTI';
+    state.setWinsPlayer = 0;
+    state.setWinsOpponent = 0;
+    state.setHistory = [];
+    state.multiChoices = { host: null, guest: null };
+
+    markGameActive('MULTI');
+    initSet(true);
+  }
+
+  function handlePeerLeftPostMatch() {
+    if (state.phase !== 'MATCH_OVER') return;
+    stopRematchCountdown();
+    state.phase = 'IDLE';
+    gameoverModal.classList.add('hidden');
+    leaveRoomClean();
+    showScreen(screenLobby);
   }
 
   function triggerScreenShake() {
@@ -1571,6 +1690,8 @@ document.addEventListener('DOMContentLoaded', () => {
           if (state.isHost) {
             if (state.isGameActive) {
               handleOpponentForfeited('참여자가 게임 도중 나갔습니다.');
+            } else if (state.phase === 'MATCH_OVER') {
+              handlePeerLeftPostMatch();
             } else {
               alert('참여자가 방을 나갔습니다.');
               stopHostAutoStartCountdown();
@@ -1588,11 +1709,41 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!state.isHost) {
             if (state.isGameActive) {
               handleOpponentForfeited('방장이 게임 도중 방을 나가 방이 사라졌습니다.');
+            } else if (state.phase === 'MATCH_OVER') {
+              handlePeerLeftPostMatch();
             } else {
               alert('방장이 방을 나가 방이 사라졌습니다. 대기실로 이동합니다.');
               leaveRoomClean();
               showScreen(screenLobby);
             }
+          }
+          break;
+
+        case 'POST_MATCH_EXIT':
+          // 게임 종료 후 한 명이라도 대기실/메인화면 이동 선택 시 나머지 한 명도 자동으로 대기실로 이동
+          if ((state.isHost && data.sender === 'GUEST') || (!state.isHost && data.sender === 'HOST')) {
+            handlePeerLeftPostMatch();
+          }
+          break;
+
+        case 'REMATCH_REQUEST':
+          if ((state.isHost && data.sender === 'GUEST') || (!state.isHost && data.sender === 'HOST')) {
+            if (state.phase === 'MATCH_OVER') {
+              rematchPeerReady = true;
+              if (rematchMyReady) {
+                sendMqttMessage({ type: 'REMATCH_START' });
+                startMultiRematchGame();
+              } else {
+                updateRematchButtonUI();
+                modalDesc.textContent = `🔔 ${data.nick || '상대방'}님이 재대결을 신청했습니다! [재대결 수락하기]를 누르면 즉시 시작됩니다.`;
+              }
+            }
+          }
+          break;
+
+        case 'REMATCH_START':
+          if (state.phase === 'MATCH_OVER') {
+            startMultiRematchGame();
           }
           break;
 
@@ -1613,6 +1764,8 @@ document.addEventListener('DOMContentLoaded', () => {
           // 게스트 게임 시작 수신
           if (!state.isHost) {
             stopHostAutoStartCountdown();
+            stopRematchCountdown();
+            gameoverModal.classList.add('hidden');
             state.opponentNickname = data.hostNick;
             state.opponentBadge = data.hostBadge;
             screenWaiting.classList.add('hidden');
@@ -2029,6 +2182,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ★ [요구사항 4] 방 나가기 및 방 폭파 처리
   function leaveRoomClean() {
     stopHostAutoStartCountdown();
+    stopRematchCountdown();
     clearInterval(roomAnnounceTimer);
 
     if (state.roomId && mqttClient && mqttClient.isConnected()) {
@@ -2148,6 +2302,14 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         } catch (e) {}
       }
+    } else if (state.phase === 'MATCH_OVER' && state.mode === 'MULTI' && state.roomId && mqttClient && mqttClient.isConnected()) {
+      try {
+        sendMqttMessage({
+          type: 'POST_MATCH_EXIT',
+          sender: state.isHost ? 'HOST' : 'GUEST'
+        });
+        leaveRoomClean();
+      } catch (e) {}
     }
   });
 
