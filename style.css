@@ -988,7 +988,7 @@ body {
   --c: #66bb6a;
   flex: 1;
   max-width: 86px;
-  height: 50px;
+  height: 75px;
   font-family: inherit;
   font-size: 13px;
   color: var(--c);
@@ -1289,7 +1289,7 @@ body {
 }
 
 @media (max-width: 480px) {
-  .power-btn { font-size: 11px; height: 45px; }
+  .power-btn { font-size: 11px; height: 68px; }
   .rps-btn { border-radius: 12px; }
   .bo3-score-board { font-size: 11px; }
 }
