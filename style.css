@@ -125,19 +125,19 @@ body {
   padding: 16px;
 }
 
-/* 메인 화면 상단 우측 언어 선택 버튼 (한글 / ENG) */
+/* 메인 카드 내부 상단 우측 언어 선택 버튼 (한글 / ENG) */
 .lang-toggle {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 14px;
+  right: 14px;
   z-index: 30;
   display: inline-flex;
   align-items: center;
   background: rgba(15, 23, 42, 0.85);
   border: 1.5px solid rgba(255, 255, 255, 0.22);
   border-radius: 20px;
-  padding: 3px;
-  gap: 3px;
+  padding: 2px;
+  gap: 2px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
 }
 .lang-btn {
@@ -145,9 +145,9 @@ body {
   background: transparent;
   color: #94a3b8;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
-  padding: 4px 10px;
+  padding: 4px 9px;
   border-radius: 16px;
   cursor: pointer;
   white-space: nowrap;
@@ -163,6 +163,7 @@ body {
 }
 
 .main-card {
+  position: relative;
   width: 100%;
   max-width: 440px;
   background: rgba(18, 28, 48, 0.85);
@@ -1453,5 +1454,5 @@ html[lang="en"] .result-text {
   html[lang="en"] .power-btn { font-size: 10.5px; }
   .rps-btn { border-radius: 12px; }
   .bo3-score-board { font-size: 11px; }
-  .lang-toggle { top: 8px; right: 8px; }
+  .lang-toggle { top: 12px; right: 12px; }
 }
