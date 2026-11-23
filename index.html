@@ -18,63 +18,69 @@
          화면 1: 메인 화면 (닉네임 설정 및 모드 선택)
          ============================================== -->
     <div id="screen-main" class="screen">
+      <!-- 상단 우측 언어 선택 버튼 (한글 / ENG) -->
+      <div class="lang-toggle" id="lang-toggle" role="group" aria-label="Language">
+        <button type="button" class="lang-btn active" id="btn-lang-ko" data-lang="ko">한글</button>
+        <button type="button" class="lang-btn" id="btn-lang-en" data-lang="en">ENG</button>
+      </div>
+
       <div class="main-card">
         <div class="main-logo-area">
           <!-- 강렬한 가위바위보 엠블럼 -->
           <div class="main-rps-graphic">
             <div class="rps-badge-orbit">
-              <div class="rps-hand-badge rps-rock" title="바위">✊</div>
+              <div class="rps-hand-badge rps-rock" title="Rock">✊</div>
               <div class="rps-vs-bolt">⚡</div>
-              <div class="rps-hand-badge rps-scissors" title="가위">✌️</div>
-              <div class="rps-hand-badge rps-paper" title="보">🖐️</div>
+              <div class="rps-hand-badge rps-scissors" title="Scissors">✌️</div>
+              <div class="rps-hand-badge rps-paper" title="Paper">🖐️</div>
             </div>
           </div>
-          <h1 class="main-title">낭떠러지 가위바위보</h1>
-          <p class="main-subtitle">영토 점령 가위바위보 심리 대전</p>
+          <h1 class="main-title" data-i18n="mainTitle">낭떠러지 가위바위보</h1>
+          <p class="main-subtitle" data-i18n="mainSubtitle">영토 점령 가위바위보 심리 대전</p>
         </div>
 
         <!-- 닉네임 입력 섹션 -->
         <div class="nickname-box">
-          <label for="input-nickname" class="box-label">도전자 닉네임</label>
+          <label for="input-nickname" class="box-label" data-i18n="nicknameLabel">도전자 닉네임</label>
           <div class="nickname-input-wrap">
             <span id="main-user-badge" class="badge-icon"></span>
-            <input type="text" id="input-nickname" maxlength="8" placeholder="닉네임을 입력하세요 (최대 8자)" autocomplete="off">
+            <input type="text" id="input-nickname" maxlength="8" data-i18n-placeholder="nicknamePlaceholder" placeholder="닉네임을 입력하세요 (최대 8자)" autocomplete="off">
           </div>
           <div class="user-tier-info" id="user-tier-info">
-            현재 등급: <span id="tier-badge-text">새내기 도전자</span> • <span id="tier-record-text">0승 0패</span>
+            <span data-i18n="rankLabel">현재 등급:</span> <span id="tier-badge-text">새내기 도전자</span> • <span id="tier-record-text">0승 0패</span>
           </div>
         </div>
 
-        <!-- 모드 및 규칙 선택 버튼 (동일 크기 3개 버튼, 가운데 정렬) -->
+        <!-- 모드 및 규칙 선택 버튼 (동일 크기 3개 버튼, 왼쪽 정렬) -->
         <div class="mode-select-group">
           <button id="btn-mode-single" class="mode-btn btn-single">
             <span class="mode-icon">🏆</span>
             <div class="mode-texts">
-              <span class="mode-name">싱글 챌린지 (1~10단계)</span>
-              <span class="mode-desc">3판 2승제 보스전 • 별/다이아 마크 도전</span>
+              <span class="mode-name" data-i18n="singleBtnTitle">싱글 챌린지 (1~10단계)</span>
+              <span class="mode-desc" data-i18n="singleBtnDesc">3판 2승제 보스전 • 별/다이아 마크 도전</span>
             </div>
           </button>
 
           <button id="btn-mode-multi" class="mode-btn btn-multi">
             <span class="mode-icon">🌐</span>
             <div class="mode-texts">
-              <span class="mode-name">멀티플레이 대전 (온라인)</span>
-              <span class="mode-desc">실시간 1:1 온라인 방 생성 및 대전</span>
+              <span class="mode-name" data-i18n="multiBtnTitle">멀티플레이 대전 (온라인)</span>
+              <span class="mode-desc" data-i18n="multiBtnDesc">실시간 1:1 온라인 방 생성 및 대전</span>
             </div>
           </button>
 
           <button id="btn-main-rules" class="mode-btn btn-rules">
             <span class="mode-icon">📜</span>
             <div class="mode-texts">
-              <span class="mode-name">게임 규칙 보기</span>
-              <span class="mode-desc">파워별 전진/후퇴 및 필살기 핵심 가이드</span>
+              <span class="mode-name" data-i18n="rulesBtnTitle">게임 규칙 보기</span>
+              <span class="mode-desc" data-i18n="rulesBtnDesc">파워별 전진/후퇴 및 필살기 핵심 가이드</span>
             </div>
           </button>
         </div>
 
         <!-- 하단 보조 바 -->
         <div class="main-footer-bar">
-          <span class="version-tag">낭떠러지 가위바위보 • v2.6 Edition</span>
+          <span class="version-tag" data-i18n="footerTag">낭떠러지 가위바위보 • v2.6 Edition</span>
         </div>
       </div>
     </div>
@@ -85,25 +91,25 @@
          ============================================== -->
     <div id="screen-lobby" class="screen hidden">
       <header class="lobby-header">
-        <button id="btn-lobby-back" class="icon-btn" title="메인으로">◀</button>
+        <button id="btn-lobby-back" class="icon-btn" title="Back">◀</button>
         <div class="lobby-title-area">
-          <h2>🌐 멀티플레이 대기실</h2>
+          <h2 data-i18n="lobbyTitle">🌐 멀티플레이 대기실</h2>
           <span class="lobby-my-name" id="lobby-my-profile">나: 닉네임</span>
         </div>
         <div class="lobby-status-pill">
           <span class="status-dot online"></span>
-          <span id="lobby-net-status">온라인 연결됨</span>
+          <span id="lobby-net-status" data-i18n="netOnline">온라인 연결됨</span>
         </div>
       </header>
 
       <div class="lobby-toolbar">
-        <button id="btn-open-create-room" class="lobby-action-btn primary">➕ 방 만들기</button>
-        <button id="btn-refresh-rooms" class="lobby-action-btn secondary">🔄 새로고침</button>
+        <button id="btn-open-create-room" class="lobby-action-btn primary" data-i18n="btnCreateRoom">➕ 방 만들기</button>
+        <button id="btn-refresh-rooms" class="lobby-action-btn secondary" data-i18n="btnRefresh">🔄 새로고침</button>
       </div>
 
       <!-- 방 목록 리스트 -->
       <div class="room-list-container" id="room-list-container">
-        <div class="empty-room-msg" id="empty-room-msg">
+        <div class="empty-room-msg" id="empty-room-msg" data-i18n-html="emptyRoomMsg">
           개설된 방이 없습니다.<br>직접 방을 만들어 다른 유저를 기다려 보세요!
         </div>
       </div>
@@ -124,25 +130,25 @@
           <div class="slot host-slot">
             <div class="slot-avatar">🤠</div>
             <div class="slot-name" id="wait-host-name">방장</div>
-            <span class="slot-role host">방장</span>
+            <span class="slot-role host" data-i18n="roleHost">방장</span>
           </div>
 
           <div class="vs-divider">VS</div>
 
           <div class="slot guest-slot" id="guest-slot-box">
             <div class="slot-avatar" id="wait-guest-avatar">⏳</div>
-            <div class="slot-name" id="wait-guest-name">유저 대기 중...</div>
-            <span class="slot-role guest" id="wait-guest-role">참가자</span>
+            <div class="slot-name" id="wait-guest-name" data-i18n="guestWaiting">유저 대기 중...</div>
+            <span class="slot-role guest" id="wait-guest-role" data-i18n="roleGuest">참가자</span>
           </div>
         </div>
 
-        <div class="wait-status-msg" id="wait-status-msg">
+        <div class="wait-status-msg" id="wait-status-msg" data-i18n="waitOtherPlayer">
           다른 플레이어의 입장을 기다리고 있습니다...
         </div>
 
         <div class="room-action-row">
           <button id="btn-host-start-game" class="primary-btn hidden">🔥 게임 시작 (30초)</button>
-          <button id="btn-leave-room" class="sub-link-btn danger">방 나가기</button>
+          <button id="btn-leave-room" class="sub-link-btn danger" data-i18n="btnLeaveRoom">방 나가기</button>
         </div>
       </div>
     </div>
@@ -232,7 +238,7 @@
             <span class="dot" data-set="3">－</span>
           </div>
         </div>
-        <div class="bo3-title-badge">3판 2승제</div>
+        <div class="bo3-title-badge" data-i18n="bo3Badge">3판 2승제</div>
         <div class="bo3-team ai-team">
           <div class="bo3-dots" id="bo3-a-dots">
             <span class="dot" data-set="1">－</span>
@@ -248,32 +254,32 @@
       <footer class="controls">
         <div class="decision" id="decision-panel">
           <!-- 1단계 파워결정 버튼식 테두리 라벨 -->
-          <div class="step-tag-pill">⚡ 1단계 파워결정</div>
+          <div class="step-tag-pill" data-i18n="step1Pill">⚡ 1단계 파워결정</div>
 
           <!-- 파워 버튼 4종 한 줄 가운데 정렬 -->
           <div class="power-row">
             <button class="power-btn p1 selected" data-bet="1">
-              <span class="lvl"><i></i><i></i><i></i></span>약파워<small class="cnt-badge">∞</small>
+              <span class="lvl"><i></i><i></i><i></i></span><span data-i18n="p1Label">약파워</span><small class="cnt-badge">∞</small>
             </button>
             <button class="power-btn p2" data-bet="2">
-              <span class="lvl"><i></i><i></i><i></i></span>중파워<small class="cnt-badge" id="p-cnt-2">7</small>
+              <span class="lvl"><i></i><i></i><i></i></span><span data-i18n="p2Label">중파워</span><small class="cnt-badge" id="p-cnt-2">7</small>
             </button>
             <button class="power-btn p3" data-bet="3">
-              <span class="lvl"><i></i><i></i><i></i></span>강파워<small class="cnt-badge" id="p-cnt-3">5</small>
+              <span class="lvl"><i></i><i></i><i></i></span><span data-i18n="p3Label">강파워</span><small class="cnt-badge" id="p-cnt-3">5</small>
             </button>
             <button class="power-btn p4-special locked" id="btn-special" data-bet="4" title="상대 3연속 약파워 시 활성화 (3회)">
-              <span class="special-icon">⚡</span>필살기<small class="cnt-badge" id="p-cnt-4">0</small>
+              <span class="special-icon">⚡</span><span data-i18n="p4Label">필살기</span><small class="cnt-badge" id="p-cnt-4">0</small>
             </button>
           </div>
 
           <!-- 2단계 가위바위보 결정 버튼식 테두리 라벨 (간격 띄움) -->
-          <div class="step-tag-pill step2-pill">✌️ 2단계 가위바위보 결정</div>
+          <div class="step-tag-pill step2-pill" data-i18n="step2Pill">✌️ 2단계 가위바위보 결정</div>
 
           <!-- 2단계 정사각형 가위/바위/보 버튼 -->
           <div class="rps-row">
-            <button class="rps-btn" data-hand="scissors"><span class="rps-emoji">✌️</span>가위</button>
-            <button class="rps-btn" data-hand="rock"><span class="rps-emoji">✊</span>바위</button>
-            <button class="rps-btn" data-hand="paper"><span class="rps-emoji">🖐️</span>보</button>
+            <button class="rps-btn" data-hand="scissors"><span class="rps-emoji">✌️</span><span data-i18n="handScissors">가위</span></button>
+            <button class="rps-btn" data-hand="rock"><span class="rps-emoji">✊</span><span data-i18n="handRock">바위</span></button>
+            <button class="rps-btn" data-hand="paper"><span class="rps-emoji">🖐️</span><span data-i18n="handPaper">보</span></button>
           </div>
         </div>
       </footer>
@@ -286,11 +292,11 @@
     <!-- 방 만들기 모달 -->
     <div id="modal-create-room" class="modal hidden">
       <div class="modal-card">
-        <h3>➕ 멀티플레이 방 만들기</h3>
-        <input type="text" id="input-room-title" maxlength="15" placeholder="방 제목을 입력하세요" class="modal-input">
+        <h3 data-i18n="createRoomTitle">➕ 멀티플레이 방 만들기</h3>
+        <input type="text" id="input-room-title" maxlength="15" data-i18n-placeholder="roomTitlePlaceholder" placeholder="방 제목을 입력하세요" class="modal-input">
         <div class="modal-btn-row">
-          <button id="btn-confirm-create-room" class="primary-btn">방 생성</button>
-          <button id="btn-cancel-create-room" class="secondary-btn">취소</button>
+          <button id="btn-confirm-create-room" class="primary-btn" data-i18n="btnCreateConfirm">방 생성</button>
+          <button id="btn-cancel-create-room" class="secondary-btn" data-i18n="btnCancel">취소</button>
         </div>
       </div>
     </div>
@@ -312,69 +318,70 @@
     <!-- 룰 설명 모달 -->
     <div id="rules-modal" class="modal hidden">
       <div class="modal-card rules">
-        <h2>📜 낭떠러지 가위바위보 규칙</h2>
+        <h2 data-i18n="rulesModalTitle">📜 낭떠러지 가위바위보 규칙</h2>
 
         <div class="rules-section">
-          <h3>🎯 게임 목표 (3판 2승제)</h3>
-          <p>가위바위보 심리전으로 상대를 밀어내어 <b>절벽(5칸) 아래로 떨어뜨리면 세트 승리!</b> 먼저 2세트를 따내는 플레이어가 최종 승리합니다.</p>
+          <h3 data-i18n="rulesGoalTitle">🎯 게임 목표 (3판 2승제)</h3>
+          <p data-i18n-html="rulesGoalDesc">가위바위보 심리전으로 상대를 밀어내어 <b>절벽(5칸) 아래로 떨어뜨리면 세트 승리!</b> 먼저 2세트를 따내는 플레이어가 최종 승리합니다.</p>
         </div>
 
         <div class="rules-section">
-          <h3>⚡ 1단계: 파워 선택 및 전진 / 후퇴 규칙</h3>
+          <h3 data-i18n="rulesPowerTitle">⚡ 1단계: 파워 선택 및 전진 / 후퇴 규칙</h3>
           <div class="rules-table">
             <div class="rule-row head">
-              <span>파워 종류</span>
-              <span>전진력</span>
-              <span>1판 제한</span>
-              <span>승/패/무 이동 규칙</span>
+              <span data-i18n="tblPower">파워 종류</span>
+              <span data-i18n="tblPush">전진력</span>
+              <span data-i18n="tblLimit">1판 제한</span>
+              <span data-i18n="tblRule">승/패/무 이동 규칙</span>
             </div>
             <div class="rule-row">
-              <span class="p-tag p1">🟢 약파워</span>
-              <span class="p-num">+1칸</span>
-              <span>무제한</span>
-              <span>승리 시 <b>+1칸 전진</b> / 패배 시 <b>상대 파워만큼 후퇴</b></span>
+              <span class="p-tag p1" data-i18n="tblP1">🟢 약파워</span>
+              <span class="p-num" data-i18n="tblStep1">+1칸</span>
+              <span data-i18n="tblUnlim">무제한</span>
+              <span data-i18n-html="tblRule1">승리 시 <b>+1칸 전진</b> / 패배 시 <b>상대 파워만큼 후퇴</b></span>
             </div>
             <div class="rule-row">
-              <span class="p-tag p2">🟠 중파워</span>
-              <span class="p-num">+2칸</span>
-              <span>7회</span>
-              <span>승리 시 <b>+2칸 전진</b> / 패배 시 <b>상대 파워만큼 후퇴</b></span>
+              <span class="p-tag p2" data-i18n="tblP2">🟠 중파워</span>
+              <span class="p-num" data-i18n="tblStep2">+2칸</span>
+              <span data-i18n="tblLim7">7회</span>
+              <span data-i18n-html="tblRule2">승리 시 <b>+2칸 전진</b> / 패배 시 <b>상대 파워만큼 후퇴</b></span>
             </div>
             <div class="rule-row">
-              <span class="p-tag p3">🔴 강파워</span>
-              <span class="p-num">+3칸</span>
-              <span>5회</span>
-              <span>승리 시 <b>+3칸 전진</b> / 패배 시 <b>상대 파워만큼 후퇴</b></span>
+              <span class="p-tag p3" data-i18n="tblP3">🔴 강파워</span>
+              <span class="p-num" data-i18n="tblStep3">+3칸</span>
+              <span data-i18n="tblLim5">5회</span>
+              <span data-i18n-html="tblRule3">승리 시 <b>+3칸 전진</b> / 패배 시 <b>상대 파워만큼 후퇴</b></span>
             </div>
             <div class="rule-row special">
-              <span class="p-tag p4">⚡ 필살기</span>
-              <span class="p-num">+4칸</span>
-              <span>3회</span>
-              <span>상대 3연속 약파워 시 활성화! 승리 시 <b>+4칸 대량 전진</b></span>
+              <span class="p-tag p4" data-i18n="tblP4">⚡ 필살기</span>
+              <span class="p-num" data-i18n="tblStep4">+4칸</span>
+              <span data-i18n="tblLim3">3회</span>
+              <span data-i18n-html="tblRule4">상대 3연속 약파워 시 활성화! 승리 시 <b>+4칸 대량 전진</b></span>
             </div>
           </div>
         </div>
 
         <div class="rules-section">
-          <h3>⚖️ 비겼을 때 (무승부 심리 카운터)</h3>
-          <p>• 가위바위보를 비기면 <b>더 낮은 파워를 낸 쪽이 파워 차이만큼 상대를 밀어냅니다!</b></p>
-          <div class="rule-tip">💡 예: 상대가 [강파워(3)] vs 내가 [약파워(1)]로 비기면 ➔ <b>내가 2칸 전진!</b> (파워가 같으면 이동 없음)</div>
+          <h3 data-i18n="rulesDrawTitle">⚖️ 비겼을 때 (무승부 심리 카운터)</h3>
+          <p data-i18n-html="rulesDrawDesc">• 가위바위보를 비기면 <b>더 낮은 파워를 낸 쪽이 파워 차이만큼 상대를 밀어냅니다!</b></p>
+          <div class="rule-tip" data-i18n-html="rulesDrawTip">💡 예: 상대가 [강파워(3)] vs 내가 [약파워(1)]로 비기면 ➔ <b>내가 2칸 전진!</b> (파워가 같으면 이동 없음)</div>
         </div>
 
         <div class="rules-section">
-          <h3>⏱️ 타임아웃 & 페널티 규칙</h3>
-          <p>• <b>15초 내 미선택</b>: 약파워(1칸)로 강제 패배 처리됩니다.</p>
-          <p>• <b>게임 중도 이탈</b>: 경기 도중 나가면 <b>1패가 추가</b>됩니다.</p>
-          <p>• <b>싱글 모드</b>: 새 게임은 항상 1단계부터 시작하며, 3/5/8/10단계 클리어 시 <b>⭐ 별 및 💎 다이아 마크</b>가 영구 유지됩니다.</p>
+          <h3 data-i18n="rulesPenaltyTitle">⏱️ 타임아웃 & 페널티 규칙</h3>
+          <p data-i18n-html="rulesPenalty1">• <b>15초 내 미선택</b>: 약파워(1칸)로 강제 패배 처리됩니다.</p>
+          <p data-i18n-html="rulesPenalty2">• <b>게임 중도 이탈</b>: 경기 도중 나가면 <b>1패가 추가</b>됩니다.</p>
+          <p data-i18n-html="rulesPenalty3">• <b>싱글 모드</b>: 새 게임은 항상 1단계부터 시작하며, 3/5/8/10단계 클리어 시 <b>⭐ 별 및 💎 다이아 마크</b>가 영구 유지됩니다.</p>
         </div>
 
-        <button id="btn-close-rules" class="primary-btn">확인 및 닫기</button>
+        <button id="btn-close-rules" class="primary-btn" data-i18n="btnCloseRules">확인 및 닫기</button>
       </div>
     </div>
 
   </div>
 
   <script src="sound.js"></script>
+  <script src="i18n.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

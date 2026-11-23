@@ -16,26 +16,27 @@ document.addEventListener('DOMContentLoaded', () => {
     paper: { name: '보', emoji: '🖐️', beats: 'rock' }
   };
 
-  const POWER_NAMES = {
-    1: '약파워',
-    2: '중파워',
-    3: '강파워',
-    4: '⚡필살기'
-  };
+  const t = (key, vars) => window.I18N.t(key, vars);
+  const getPowerName = (bet) => window.I18N.getPowerName(bet);
 
-  // 싱글 10단계 AI 캐릭터 정보
+  // 싱글 10단계 AI 캐릭터 정보 (한글 / 영문)
   const SINGLE_STAGES = [
-    { stage: 1, name: '초보 다람쥐', emoji: '🐿️' },
-    { stage: 2, name: '골목길 대장', emoji: '😼' },
-    { stage: 3, name: '바위산 수련생', emoji: '🪨' },
-    { stage: 4, name: '질풍의 권사', emoji: '🌪️' },
-    { stage: 5, name: '강철 골렘', emoji: '🛡️' },
-    { stage: 6, name: '그림자 닌자', emoji: '🥷' },
-    { stage: 7, name: '심리전의 마왕', emoji: '😈' },
-    { stage: 8, name: '절벽의 수호신', emoji: '⚡' },
-    { stage: 9, name: '패왕 드래곤', emoji: '🐲' },
-    { stage: 10, name: '가위바위보 황제', emoji: '👑' }
+    { stage: 1, name: '초보 다람쥐', nameEn: 'Squirrel', emoji: '🐿️' },
+    { stage: 2, name: '골목길 대장', nameEn: 'Alley Cat', emoji: '😼' },
+    { stage: 3, name: '바위산 수련생', nameEn: 'Rock Monk', emoji: '🪨' },
+    { stage: 4, name: '질풍의 권사', nameEn: 'Wind Fist', emoji: '🌪️' },
+    { stage: 5, name: '강철 골렘', nameEn: 'Iron Golem', emoji: '🛡️' },
+    { stage: 6, name: '그림자 닌자', nameEn: 'Shadow Ninja', emoji: '🥷' },
+    { stage: 7, name: '심리전의 마왕', nameEn: 'Mind Demon', emoji: '😈' },
+    { stage: 8, name: '절벽의 수호신', nameEn: 'Cliff Guard', emoji: '⚡' },
+    { stage: 9, name: '패왕 드래곤', nameEn: 'Dragon Lord', emoji: '🐲' },
+    { stage: 10, name: '가위바위보 황제', nameEn: 'RPS Emperor', emoji: '👑' }
   ];
+
+  function getStageDisplayName(stg) {
+    if (!stg) return '';
+    return window.I18N.lang === 'en' ? stg.nameEn : stg.name;
+  }
 
   // --- 사용자 영구 데이터 (localStorage) ---
   const USER_KEY = 'jump2you_user_profile_v2';
@@ -71,11 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getTierText(highest, isMaster) {
-    if (isMaster || highest >= 10) return '가위바위보 달인 💎';
-    if (highest >= 8) return '절벽의 정복자 ⭐⭐⭐';
-    if (highest >= 5) return '강철의 파이터 ⭐⭐';
-    if (highest >= 3) return '바위산 수련생 ⭐';
-    return '새내기 도전자';
+    if (isMaster || highest >= 10) return t('tierMaster');
+    if (highest >= 8) return t('tier8');
+    if (highest >= 5) return t('tier5');
+    if (highest >= 3) return t('tier3');
+    return t('tier1');
   }
 
   // --- 게임 상태 관리 ---
@@ -176,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (state.isGameActive && state.mode === 'MULTI') {
         if (Date.now() - lastOpponentHeartbeat > 7000) {
           stopMultiHeartbeat();
-          handleOpponentForfeited('상대방과의 연결이 끊어졌거나 창을 닫았습니다 (비정상 종료).');
+          handleOpponentForfeited(t('reasonPeerDisconnect'));
         }
       }
     }, 1000);
@@ -207,9 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
     saveUserProfile();
 
     window.soundEngine.playVictory();
-    speak('상대방 기권으로 승리하였습니다');
+    speak(t('speakForfeitWin'));
 
-    alert(`${reasonText || '상대방이 게임을 나갔습니다.'}\n\n[몰수승] 1승이 추가되었으며 대기실로 이동합니다!`);
+    alert(t('alertForfeitWin', { reason: reasonText || t('reasonGuestLeftGame') }));
 
     leaveRoomClean();
     showScreen(screenLobby);
@@ -346,17 +347,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const rulesModal = $('rules-modal');
   const btnCloseRules = $('btn-close-rules');
 
-  // ---------- 음성 합성 (TTS) ----------
+  // ---------- 음성 합성 (TTS - 현재 언어 연동) ----------
   function speak(text) {
     if (!window.soundEngine.enabled || !('speechSynthesis' in window)) return;
     try {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ko-KR';
+      const isEn = window.I18N.lang === 'en';
+      u.lang = isEn ? 'en-US' : 'ko-KR';
       u.rate = 1.05;
-      u.pitch = 1.15;
-      const ko = window.speechSynthesis.getVoices().find(v => v.lang && v.lang.startsWith('ko'));
-      if (ko) u.voice = ko;
+      u.pitch = 1.1;
+      const prefix = isEn ? 'en' : 'ko';
+      const voice = window.speechSynthesis.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith(prefix));
+      if (voice) u.voice = voice;
       window.speechSynthesis.speak(u);
     } catch (e) { /* ignore */ }
   }
@@ -367,10 +370,45 @@ document.addEventListener('DOMContentLoaded', () => {
     screen.classList.remove('hidden');
   }
 
+  // 언어 전환 시 정적 + 동적 UI 전체 동기화
+  function applyLanguageUI(lang, persist = true) {
+    window.I18N.setLang(lang, persist);
+    updateMainBadgeUI();
+    updateBo3UI();
+    updatePowerCountsUI();
+    if (pPower) {
+      pPower.textContent = getPowerName(state.playerBet);
+    }
+    if (lobbyMyProfile && userProfile.nickname) {
+      lobbyMyProfile.textContent = `${t('lobbyMyPrefix')} ${getBadgeMark(userProfile.highestStage, userProfile.masterTitle)} ${userProfile.nickname}`;
+    }
+    if (!screenLobby.classList.contains('hidden')) {
+      renderRoomList();
+    }
+  }
+
   // ---------- 메인 닉네임 관리 ----------
   function initMainScreen() {
     inputNickname.value = userProfile.nickname || '';
-    updateMainBadgeUI();
+
+    // 언어 선택 버튼 바인딩 (한글 / ENG)
+    const btnLangKo = $('btn-lang-ko');
+    const btnLangEn = $('btn-lang-en');
+    if (btnLangKo) {
+      btnLangKo.addEventListener('click', () => {
+        window.soundEngine.playClick();
+        applyLanguageUI('ko', true);
+      });
+    }
+    if (btnLangEn) {
+      btnLangEn.addEventListener('click', () => {
+        window.soundEngine.playClick();
+        applyLanguageUI('en', true);
+      });
+    }
+
+    // 기기 언어 자동 감지 결과 적용 (저장된 설정 없을 시 한국어 -> ko, 그 외 -> en)
+    applyLanguageUI(window.I18N.lang, false);
 
     inputNickname.addEventListener('input', () => {
       userProfile.nickname = inputNickname.value.trim();
@@ -385,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userProfile.losses = (userProfile.losses || 0) + 1;
         saveUserProfile();
         setTimeout(() => {
-          alert('이전 게임의 비정상 종료(창 닫기/강제 종료 등)가 감지되어 1패가 추가되었습니다.');
+          alert(t('alertAbruptExit'));
         }, 500);
       }
     } catch (e) {}
@@ -396,14 +434,14 @@ document.addEventListener('DOMContentLoaded', () => {
     mainUserBadge.textContent = badge;
     tierBadgeText.textContent = getTierText(userProfile.highestStage, userProfile.masterTitle);
     if (tierRecordText) {
-      tierRecordText.textContent = `${userProfile.wins || 0}승 ${userProfile.losses || 0}패`;
+      tierRecordText.textContent = t('recordFmt', { w: userProfile.wins || 0, l: userProfile.losses || 0 });
     }
   }
 
   function validateNickname() {
     const nick = inputNickname.value.trim();
     if (!nick) {
-      alert('닉네임을 입력해 주세요!');
+      alert(t('alertEnterNick'));
       inputNickname.focus();
       return false;
     }
@@ -829,22 +867,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- ★ [요구사항 2] 3판 2승제 상황표 (아이디 한 줄 깔끔 처리) ----------
   function updateBo3UI() {
-    const pNick = userProfile.nickname || '나';
+    const pNick = userProfile.nickname || t('meLabel');
     const pBadge = getBadgeMark(userProfile.highestStage, userProfile.masterTitle);
     bo3PName.textContent = `${pBadge} ${pNick}`;
-    bo3PScore.textContent = `${state.setWinsPlayer}승`;
+    bo3PScore.textContent = `${state.setWinsPlayer}${t('winUnit')}`;
 
-    let oppNick = '상대';
+    let oppNick = t('oppLabel');
     let oppBadge = '';
     if (state.mode === 'SINGLE') {
       const stg = SINGLE_STAGES[state.currentStage - 1];
-      oppNick = `${stg.emoji} ${stg.name}`;
+      oppNick = `${stg.emoji} ${getStageDisplayName(stg)}`;
     } else {
       oppBadge = state.opponentBadge;
-      oppNick = state.opponentNickname || '상대';
+      oppNick = state.opponentNickname || t('oppLabel');
     }
     bo3AName.textContent = `${oppBadge} ${oppNick}`;
-    bo3AScore.textContent = `${state.setWinsOpponent}승`;
+    bo3AScore.textContent = `${state.setWinsOpponent}${t('winUnit')}`;
 
     const pDots = bo3PDots.querySelectorAll('.dot');
     const aDots = bo3ADots.querySelectorAll('.dot');
@@ -894,11 +932,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.powerCounts.p4 > 0) {
       btnSpecial.classList.remove('locked');
       btnSpecial.classList.add('active');
-      btnSpecial.title = `⚡필살기 사용 가능! (남은 횟수: ${state.powerCounts.p4}회)`;
+      btnSpecial.title = t('titleUltReady', { cnt: state.powerCounts.p4 });
     } else {
       btnSpecial.classList.add('locked');
       btnSpecial.classList.remove('active');
-      btnSpecial.title = '상대 3연속 약파워 시 3회 활성화';
+      btnSpecial.title = t('titleUltLocked');
       if (state.playerBet === 4) setPlayerPower(1);
     }
   }
@@ -919,20 +957,20 @@ document.addEventListener('DOMContentLoaded', () => {
   function setPlayerPower(p) {
     // 횟수 소진 여부 확인
     if (p === 2 && state.powerCounts.p2 <= 0) {
-      alert('이번 판의 중파워(7회)를 모두 사용했습니다!');
+      alert(t('alertNoMid'));
       return;
     }
     if (p === 3 && state.powerCounts.p3 <= 0) {
-      alert('이번 판의 강파워(5회)를 모두 사용했습니다!');
+      alert(t('alertNoHard'));
       return;
     }
     if (p === 4 && state.powerCounts.p4 <= 0) {
-      alert('상대방이 약파워를 3회 연속 사용할 때 필살기(3회)가 열립니다!');
+      alert(t('alertNoUlt'));
       return;
     }
 
     state.playerBet = p;
-    pPower.textContent = POWER_NAMES[p];
+    pPower.textContent = getPowerName(p);
     pPower.className = `power-chip p${p}`;
 
     powerBtns.forEach(b => {
@@ -959,16 +997,16 @@ document.addEventListener('DOMContentLoaded', () => {
     state.aiPowerCounts.p4 = 0;
 
     const stg = SINGLE_STAGES[state.currentStage - 1] || SINGLE_STAGES[0];
-    const pNick = userProfile.nickname || '나';
+    const pNick = userProfile.nickname || t('meLabel');
     const pBadge = getBadgeMark(userProfile.highestStage, userProfile.masterTitle);
 
     matchStageTitle.textContent = state.mode === 'SINGLE'
-      ? `싱글 ${stg.stage}단계: ${stg.name}`
-      : `멀티 대전 vs ${state.opponentNickname}`;
+      ? t('singleStageHeader', { stage: stg.stage, name: getStageDisplayName(stg) })
+      : t('multiStageHeader', { opp: state.opponentNickname });
 
     pNameEl.textContent = `${pBadge} ${pNick}`;
     aNameEl.textContent = state.mode === 'SINGLE'
-      ? `${stg.name} ${stg.emoji}`
+      ? `${getStageDisplayName(stg)} ${stg.emoji}`
       : `${state.opponentBadge} ${state.opponentNickname}`;
 
     updateBoard();
@@ -1169,29 +1207,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (isTimeout) {
       delta = -aBet;
-      label = '시간 초과!';
-      sub = `약파워 패배 (${-delta}칸 후퇴)`;
+      label = t('resTimeout');
+      sub = t('subTimeout', { n: -delta });
     } else {
       const rps = judgeRPS(pHandKey, aHandKey);
       if (rps === 'win') {
         delta = pBet;
-        label = '이겼다!';
-        sub = `+${pBet}칸 전진`;
+        label = t('resWin');
+        sub = t('subAdvance', { n: pBet });
       } else if (rps === 'lose') {
         delta = -aBet;
-        label = '졌다!';
-        sub = `${-aBet}칸 후퇴`;
+        label = t('resLose');
+        sub = t('subRetreat', { n: -aBet });
       } else {
-        label = '비겼다!';
+        label = t('resDraw');
         if (pBet < aBet) {
           delta = aBet - pBet;
-          sub = `+${delta}칸 전진`;
+          sub = t('subAdvance', { n: delta });
         } else if (pBet > aBet) {
           delta = -(pBet - aBet);
-          sub = `${delta}칸 후퇴`;
+          sub = t('subRetreat', { n: delta });
         } else {
           delta = 0;
-          sub = '이동 없음';
+          sub = t('subNoMove');
         }
       }
     }
@@ -1225,9 +1263,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     pHand.textContent = HANDS[pHandKey].emoji;
     aHand.textContent = HANDS[aHandKey].emoji;
-    pPower.textContent = POWER_NAMES[pBet];
+    pPower.textContent = getPowerName(pBet);
     pPower.className = `power-chip p${pBet}`;
-    aPower.textContent = POWER_NAMES[aBet];
+    aPower.textContent = getPowerName(aBet);
     aPower.className = `power-chip p${aBet}`;
 
     resultText.textContent = label;
@@ -1264,14 +1302,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- 한판 승/패 결정 시 3초간 세트 스코어 결과(1승/1패/1승1패 등) 화면 연출 ----------
   function getSetResultText(myWins, oppWins) {
-    if (myWins === 1 && oppWins === 0) return '1승!';
-    if (myWins === 0 && oppWins === 1) return '1패!';
-    if (myWins === 1 && oppWins === 1) return '1승 1패!';
-    if (myWins === 2 && oppWins === 0) return '2승!';
-    if (myWins === 0 && oppWins === 2) return '2패!';
-    if (myWins === 2 && oppWins === 1) return '2승 1패!';
-    if (myWins === 1 && oppWins === 2) return '1승 2패!';
-    return `${myWins}승 ${oppWins}패!`;
+    if (myWins === 1 && oppWins === 0) return t('set1W');
+    if (myWins === 0 && oppWins === 1) return t('set1L');
+    if (myWins === 1 && oppWins === 1) return t('set1W1L');
+    if (myWins === 2 && oppWins === 0) return t('set2W');
+    if (myWins === 0 && oppWins === 2) return t('set2L');
+    if (myWins === 2 && oppWins === 1) return t('set2W1L');
+    if (myWins === 1 && oppWins === 2) return t('set1W2L');
+    return t('setFallback', { my: myWins, opp: oppWins });
   }
 
   function showSetOutcomeUI(myWins, oppWins, isMyWin, onComplete) {
@@ -1288,7 +1326,7 @@ document.addEventListener('DOMContentLoaded', () => {
     void resultText.offsetWidth;
     resultText.style.animation = '';
 
-    resultSub.textContent = `현재 스코어: 나 ${myWins}승 : ${oppWins}승 상대`;
+    resultSub.textContent = t('setScoreSub', { my: myWins, opp: oppWins });
     overlay.classList.remove('hidden');
 
     pZone.classList.remove('win', 'lose');
@@ -1368,43 +1406,43 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.currentStage === 10) {
           userProfile.masterTitle = true;
           saveUserProfile();
-          modalTitle.textContent = '가위바위보 달인에 등극하였습니다!';
+          modalTitle.textContent = t('masterTitle');
           modalTitle.style.color = '#ffd600';
-          modalDesc.textContent = '10단계 가위바위보 황제를 꺾고 💎 다이아몬드 마크를 획득하셨습니다!';
-          speak('가위바위보 달인에 등극하였습니다!');
+          modalDesc.textContent = t('masterDesc');
+          speak(t('masterSpeak'));
 
           const btnRestart = document.createElement('button');
           btnRestart.className = 'primary-btn';
-          btnRestart.textContent = '1단계부터 다시 시작 🔥';
+          btnRestart.textContent = t('btnRestart1');
           btnRestart.onclick = () => { gameoverModal.classList.add('hidden'); startSingleGame(1); };
 
           const btnHome = document.createElement('button');
           btnHome.className = 'secondary-btn';
-          btnHome.textContent = '메인 화면으로 돌아가기';
+          btnHome.textContent = t('btnToMain');
           btnHome.onclick = () => { gameoverModal.classList.add('hidden'); showScreen(screenMain); };
 
           modalActionBtns.appendChild(btnRestart);
           modalActionBtns.appendChild(btnHome);
         } else {
           let bonusMsg = '';
-          if (state.currentStage === 3) bonusMsg = ' (⭐ 별 마크 획득!)';
-          if (state.currentStage === 5) bonusMsg = ' (⭐⭐ 별 2개 마크 획득!)';
-          if (state.currentStage === 8) bonusMsg = ' (⭐⭐⭐ 별 3개 마크 획득!)';
+          if (state.currentStage === 3) bonusMsg = t('bonus3');
+          if (state.currentStage === 5) bonusMsg = t('bonus5');
+          if (state.currentStage === 8) bonusMsg = t('bonus8');
 
           saveUserProfile();
-          modalTitle.textContent = `${state.currentStage}단계 승리!${bonusMsg}`;
+          modalTitle.textContent = t('stageWinTitle', { stage: state.currentStage, bonus: bonusMsg });
           modalTitle.style.color = '#00e676';
-          modalDesc.textContent = `3판 2승으로 승리했습니다! 다음 단계로 도전하세요.`;
-          speak('승리');
+          modalDesc.textContent = t('stageWinDesc');
+          speak(t('speakWin'));
 
           const btnNext = document.createElement('button');
           btnNext.className = 'primary-btn';
-          btnNext.textContent = `다음 단계로 진행 (${nextStage}단계) ➔`;
+          btnNext.textContent = t('btnNextStage', { stage: nextStage });
           btnNext.onclick = () => { gameoverModal.classList.add('hidden'); startSingleGame(nextStage); };
 
           const btnHome = document.createElement('button');
           btnHome.className = 'secondary-btn';
-          btnHome.textContent = '메인 화면으로 돌아가기';
+          btnHome.textContent = t('btnToMain');
           btnHome.onclick = () => { gameoverModal.classList.add('hidden'); showScreen(screenMain); };
 
           modalActionBtns.appendChild(btnNext);
@@ -1415,19 +1453,19 @@ document.addEventListener('DOMContentLoaded', () => {
         saveUserProfile();
         window.soundEngine.playDefeat();
         modalTrophy.textContent = '💀';
-        modalTitle.textContent = `${state.currentStage}단계 패배...`;
+        modalTitle.textContent = t('stageLoseTitle', { stage: state.currentStage });
         modalTitle.style.color = '#ff5252';
-        modalDesc.textContent = '아쉽게도 3판 2승 승부에서 패배했습니다.';
-        speak('패배');
+        modalDesc.textContent = t('stageLoseDesc');
+        speak(t('speakLose'));
 
         const btnRestart = document.createElement('button');
         btnRestart.className = 'primary-btn';
-        btnRestart.textContent = '1단계부터 다시 시작 🔄';
+        btnRestart.textContent = t('btnRestart1Retry');
         btnRestart.onclick = () => { gameoverModal.classList.add('hidden'); startSingleGame(1); };
 
         const btnHome = document.createElement('button');
         btnHome.className = 'secondary-btn';
-        btnHome.textContent = '메인 화면으로 돌아가기 🏠';
+        btnHome.textContent = t('btnToMain');
         btnHome.onclick = () => { gameoverModal.classList.add('hidden'); showScreen(screenMain); };
 
         modalActionBtns.appendChild(btnRestart);
@@ -1440,19 +1478,19 @@ document.addEventListener('DOMContentLoaded', () => {
         saveUserProfile();
         window.soundEngine.playVictory();
         modalTrophy.textContent = '🏆';
-        modalTitle.textContent = '멀티 대전 최종 승리!';
+        modalTitle.textContent = t('multiWinTitle');
         modalTitle.style.color = '#00e676';
-        modalDesc.textContent = `${state.opponentNickname}님과의 3판 2승 승부에서 승리했습니다!`;
-        speak('최종 승리');
+        modalDesc.textContent = t('multiWinDesc', { opp: state.opponentNickname });
+        speak(t('speakFinalWin'));
       } else {
         userProfile.losses = (userProfile.losses || 0) + 1;
         saveUserProfile();
         window.soundEngine.playDefeat();
         modalTrophy.textContent = '💀';
-        modalTitle.textContent = '멀티 대전 최종 패배';
+        modalTitle.textContent = t('multiLoseTitle');
         modalTitle.style.color = '#ff5252';
-        modalDesc.textContent = `${state.opponentNickname}님에게 패배했습니다.`;
-        speak('최종 패배');
+        modalDesc.textContent = t('multiLoseDesc', { opp: state.opponentNickname });
+        speak(t('speakFinalLose'));
       }
 
       // ★ [요구사항] 멀티 게임 종료 후 선택 메뉴: 1. 재대결(30초 제한) / 2. 대기실로 돌아가기 / 3. 메인화면으로 돌아가기
@@ -1481,13 +1519,13 @@ document.addEventListener('DOMContentLoaded', () => {
           sendMqttMessage({ type: 'REMATCH_START' });
           startMultiRematchGame();
         } else {
-          modalDesc.textContent = '재대결을 신청했습니다! 상대방이 재대결을 선택하면 즉시 시작됩니다.';
+          modalDesc.textContent = t('rematchRequestedDesc');
         }
       };
 
       const btnToLobby = document.createElement('button');
       btnToLobby.className = 'secondary-btn';
-      btnToLobby.textContent = '대기실로 돌아가기 🌐';
+      btnToLobby.textContent = t('btnToLobby');
       btnToLobby.onclick = () => {
         stopRematchCountdown();
         state.phase = 'IDLE';
@@ -1502,7 +1540,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const btnToMain = document.createElement('button');
       btnToMain.className = 'secondary-btn';
-      btnToMain.textContent = '메인화면으로 돌아가기 🏠';
+      btnToMain.textContent = t('btnToMain');
       btnToMain.onclick = () => {
         stopRematchCountdown();
         state.phase = 'IDLE';
@@ -1562,15 +1600,15 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateRematchButtonUI() {
     if (!rematchBtnEl) return;
     if (rematchMyReady) {
-      rematchBtnEl.textContent = `⏳ 상대방 선택 대기 중... (${rematchSec}초)`;
+      rematchBtnEl.textContent = t('btnRematchWait', { sec: rematchSec });
       rematchBtnEl.disabled = true;
       rematchBtnEl.style.opacity = '0.8';
     } else if (rematchPeerReady) {
-      rematchBtnEl.textContent = `🔥 재대결 수락하기 (${rematchSec}초) - 상대 대기중!`;
+      rematchBtnEl.textContent = t('btnRematchAccept', { sec: rematchSec });
       rematchBtnEl.disabled = false;
       rematchBtnEl.style.opacity = '1';
     } else {
-      rematchBtnEl.textContent = `🔄 재대결 하기 (${rematchSec}초)`;
+      rematchBtnEl.textContent = t('btnRematch', { sec: rematchSec });
       rematchBtnEl.disabled = false;
       rematchBtnEl.style.opacity = '1';
     }
@@ -1623,7 +1661,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mqttClient = new Paho.MQTT.Client(MQTT_BROKER, MQTT_PORT, MQTT_PATH, clientId);
 
     mqttClient.onConnectionLost = () => {
-      lobbyNetStatus.textContent = '연결 끊김 (재접속 중)';
+      lobbyNetStatus.textContent = t('netLost');
       lobbyNetStatus.previousElementSibling.className = 'status-dot offline';
       setTimeout(initMqtt, 3000);
     };
@@ -1639,12 +1677,12 @@ document.addEventListener('DOMContentLoaded', () => {
       useSSL: true,
       timeout: 5,
       onSuccess: () => {
-        lobbyNetStatus.textContent = '온라인 연결됨';
+        lobbyNetStatus.textContent = t('netOnline');
         lobbyNetStatus.previousElementSibling.className = 'status-dot online';
         mqttClient.subscribe(TOPIC_LOBBY);
       },
       onFailure: () => {
-        lobbyNetStatus.textContent = '연결 실패 (재시도)';
+        lobbyNetStatus.textContent = t('netFail');
         lobbyNetStatus.previousElementSibling.className = 'status-dot offline';
         setTimeout(initMqtt, 4000);
       }
@@ -1685,7 +1723,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // ★ [요구사항 3] 방장 전용 [게임 시작 (30초)] 버튼 활성화 및 30초 자동 시작 타이머
             btnHostStartGame.classList.remove('hidden');
-            waitStatusMsg.textContent = '상대방이 입장했습니다! 30초 안에 시작을 누르세요.';
+            waitStatusMsg.textContent = t('waitGuestJoinedHost');
             startHostAutoStartCountdown();
           }
           break;
@@ -1693,24 +1731,24 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'GUEST_WAITING_SYNC':
           // 게스트 화면 상태 업데이트
           if (!state.isHost) {
-            waitStatusMsg.textContent = `방장이 게임 시작을 누르기를 기다리고 있습니다... (${data.sec}초)`;
+            waitStatusMsg.textContent = t('waitHostCountdown', { sec: data.sec });
           }
           break;
 
         case 'GUEST_LEFT':
           if (state.isHost) {
             if (state.isGameActive) {
-              handleOpponentForfeited('참여자가 게임 도중 나갔습니다.');
+              handleOpponentForfeited(t('reasonGuestLeftGame'));
             } else if (state.phase === 'MATCH_OVER') {
               handlePeerLeftPostMatch();
             } else {
-              alert('참여자가 방을 나갔습니다.');
+              alert(t('alertGuestLeftWait'));
               stopHostAutoStartCountdown();
               state.opponentNickname = '';
-              waitGuestName.textContent = '유저 대기 중...';
+              waitGuestName.textContent = t('guestWaiting');
               waitGuestAvatar.textContent = '⏳';
               btnHostStartGame.classList.add('hidden');
-              waitStatusMsg.textContent = '다른 플레이어의 입장을 기다리고 있습니다...';
+              waitStatusMsg.textContent = t('waitOtherPlayer');
             }
           }
           break;
@@ -1719,11 +1757,11 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'ROOM_CLOSED':
           if (!state.isHost) {
             if (state.isGameActive) {
-              handleOpponentForfeited('방장이 게임 도중 방을 나가 방이 사라졌습니다.');
+              handleOpponentForfeited(t('reasonHostLeftGame'));
             } else if (state.phase === 'MATCH_OVER') {
               handlePeerLeftPostMatch();
             } else {
-              alert('방장이 방을 나가 방이 사라졌습니다. 대기실로 이동합니다.');
+              alert(t('alertRoomClosedWait'));
               leaveRoomClean();
               showScreen(screenLobby);
             }
@@ -1746,7 +1784,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 startMultiRematchGame();
               } else {
                 updateRematchButtonUI();
-                modalDesc.textContent = `🔔 ${data.nick || '상대방'}님이 재대결을 신청했습니다! [재대결 수락하기]를 누르면 즉시 시작됩니다.`;
+                modalDesc.textContent = t('rematchIncomingDesc', { nick: data.nick || t('oppLabel') });
               }
             }
           }
@@ -1761,7 +1799,7 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'PLAYER_FORFEIT':
           // 상대방이 기권/이탈/창 닫기 등
           if ((state.isHost && data.sender === 'GUEST') || (!state.isHost && data.sender === 'HOST')) {
-            handleOpponentForfeited(`${data.nick || '상대방'}님이 게임을 중단하고 나갔습니다.`);
+            handleOpponentForfeited(t('reasonPeerForfeit', { nick: data.nick || t('oppLabel') }));
           }
           break;
 
@@ -1809,11 +1847,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function startHostAutoStartCountdown() {
     stopHostAutoStartCountdown();
     hostAutoStartSec = 30;
-    btnHostStartGame.textContent = `🔥 게임 시작 (${hostAutoStartSec}초)`;
+    btnHostStartGame.textContent = t('btnStartHost', { sec: hostAutoStartSec });
 
     hostAutoStartTimer = setInterval(() => {
       hostAutoStartSec--;
-      btnHostStartGame.textContent = `🔥 게임 시작 (${hostAutoStartSec}초)`;
+      btnHostStartGame.textContent = t('btnStartHost', { sec: hostAutoStartSec });
 
       // 게스트에게도 남은 초 전송
       sendMqttMessage({ type: 'GUEST_WAITING_SYNC', sec: hostAutoStartSec });
@@ -1871,37 +1909,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (h.isTimeout && g.isTimeout) {
         deltaHost = 0;
-        labelHost = '비겼다!';
-        subHost = '둘 다 시간 초과';
+        labelHost = t('resDraw');
+        subHost = t('subNoMove');
       } else if (h.isTimeout) {
         deltaHost = -g.bet;
-        labelHost = '시간 초과!';
-        subHost = `약파워 패배 (${-deltaHost}칸 후퇴)`;
+        labelHost = t('resTimeout');
+        subHost = t('subTimeout', { n: -deltaHost });
       } else if (g.isTimeout) {
         deltaHost = h.bet;
-        labelHost = '이겼다!';
-        subHost = `상대 시간 초과 (+${deltaHost}칸 전진)`;
+        labelHost = t('resWin');
+        subHost = t('subAdvance', { n: deltaHost });
       } else {
         const rps = judgeRPS(h.hand, g.hand);
         if (rps === 'win') {
           deltaHost = h.bet;
-          labelHost = '이겼다!';
-          subHost = `+${h.bet}칸 전진`;
+          labelHost = t('resWin');
+          subHost = t('subAdvance', { n: h.bet });
         } else if (rps === 'lose') {
           deltaHost = -g.bet;
-          labelHost = '졌다!';
-          subHost = `${-g.bet}칸 후퇴`;
+          labelHost = t('resLose');
+          subHost = t('subRetreat', { n: -g.bet });
         } else {
-          labelHost = '비겼다!';
+          labelHost = t('resDraw');
           if (h.bet < g.bet) {
             deltaHost = g.bet - h.bet;
-            subHost = `+${deltaHost}칸 전진`;
+            subHost = t('subAdvance', { n: deltaHost });
           } else if (h.bet > g.bet) {
             deltaHost = -(h.bet - g.bet);
-            subHost = `${deltaHost}칸 후퇴`;
+            subHost = t('subRetreat', { n: deltaHost });
           } else {
             deltaHost = 0;
-            subHost = '이동 없음';
+            subHost = t('subNoMove');
           }
         }
       }
@@ -2037,14 +2075,14 @@ document.addEventListener('DOMContentLoaded', () => {
       let myLabel = '';
       let mySub = '';
       if (myDelta > 0) {
-        myLabel = '이겼다!';
-        mySub = `+${myDelta}칸 전진`;
+        myLabel = t('resWin');
+        mySub = t('subAdvance', { n: myDelta });
       } else if (myDelta < 0) {
-        myLabel = '졌다!';
-        mySub = `${myDelta}칸 후퇴`;
+        myLabel = t('resLose');
+        mySub = t('subRetreat', { n: myDelta });
       } else {
-        myLabel = '비겼다!';
-        mySub = '이동 없음';
+        myLabel = t('resDraw');
+        mySub = t('subNoMove');
       }
 
       state.setWinsPlayer = data.guestSetWins;
@@ -2110,9 +2148,9 @@ document.addEventListener('DOMContentLoaded', () => {
       item.innerHTML = `
         <div class="room-info-col">
           <span class="room-card-title">${escapeHtml(r.title)}</span>
-          <span class="room-card-meta">방장: ${escapeHtml(r.hostBadge)} ${escapeHtml(r.hostNick)}</span>
+          <span class="room-card-meta">${t('roomHostPrefix')} ${escapeHtml(r.hostBadge)} ${escapeHtml(r.hostNick)}</span>
         </div>
-        <button class="room-join-btn">입장하기</button>
+        <button class="room-join-btn">${t('btnJoinRoom')}</button>
       `;
       item.querySelector('.room-join-btn').onclick = () => joinRoom(r.roomId, r.title, r.hostNick, r.hostBadge);
       roomListContainer.appendChild(item);
@@ -2137,9 +2175,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     waitRoomTitle.textContent = title;
     waitHostName.textContent = `${hostBadge} ${userProfile.nickname}`;
-    waitGuestName.textContent = '유저 대기 중...';
+    waitGuestName.textContent = t('guestWaiting');
     waitGuestAvatar.textContent = '⏳';
-    waitStatusMsg.textContent = '다른 플레이어의 입장을 기다리고 있습니다...';
+    waitStatusMsg.textContent = t('waitOtherPlayer');
     btnHostStartGame.classList.add('hidden');
 
     screenWaiting.classList.remove('hidden');
@@ -2173,7 +2211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     waitHostName.textContent = `${hostBadge} ${hostNick}`;
     waitGuestName.textContent = `${guestBadge} ${userProfile.nickname}`;
     waitGuestAvatar.textContent = '🤠';
-    waitStatusMsg.textContent = '방에 접속했습니다. 방장의 시작을 기다리는 중...';
+    waitStatusMsg.textContent = t('waitJoinedGuest');
     btnHostStartGame.classList.add('hidden');
 
     screenWaiting.classList.remove('hidden');
@@ -2230,7 +2268,7 @@ document.addEventListener('DOMContentLoaded', () => {
   btnModeMulti.addEventListener('click', () => {
     if (!validateNickname()) return;
     window.soundEngine.init();
-    lobbyMyProfile.textContent = `나: ${getBadgeMark(userProfile.highestStage, userProfile.masterTitle)} ${userProfile.nickname}`;
+    lobbyMyProfile.textContent = `${t('lobbyMyPrefix')} ${getBadgeMark(userProfile.highestStage, userProfile.masterTitle)} ${userProfile.nickname}`;
     initMqtt();
     showScreen(screenLobby);
   });
@@ -2239,12 +2277,12 @@ document.addEventListener('DOMContentLoaded', () => {
   btnLobbyBack.addEventListener('click', () => showScreen(screenMain));
 
   btnOpenCreateRoom.addEventListener('click', () => {
-    inputRoomTitle.value = `${userProfile.nickname}의 한판 승부!`;
+    inputRoomTitle.value = t('defaultRoomTitle', { nick: userProfile.nickname });
     modalCreateRoom.classList.remove('hidden');
   });
 
   btnConfirmCreateRoom.addEventListener('click', () => {
-    const title = inputRoomTitle.value.trim() || '즐거운 가위바위보 방';
+    const title = inputRoomTitle.value.trim() || t('fallbackRoomTitle');
     modalCreateRoom.classList.add('hidden');
     createRoom(title);
   });
@@ -2268,7 +2306,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   btnInGameExit.addEventListener('click', () => {
-    if (confirm('게임을 중단하고 나가시겠습니까? (중단 시 1패가 추가됩니다)')) {
+    if (confirm(t('confirmExitGame'))) {
       handleSurrenderOrExit();
     }
   });
@@ -2336,7 +2374,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('popstate', () => {
     if (state.isGameActive) {
-      if (confirm('게임을 중단하고 뒤로 가시겠습니까? (중단 시 1패가 추가됩니다)')) {
+      if (confirm(t('confirmBackGame'))) {
         handleSurrenderOrExit();
       } else {
         history.pushState({ inGame: true }, '');

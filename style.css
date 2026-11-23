@@ -119,9 +119,47 @@ body {
    화면 1: 메인 화면 (Home)
    ======================================================== */
 #screen-main {
+  position: relative;
   justify-content: center;
   align-items: center;
   padding: 16px;
+}
+
+/* 메인 화면 상단 우측 언어 선택 버튼 (한글 / ENG) */
+.lang-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-radius: 20px;
+  padding: 3px;
+  gap: 3px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+}
+.lang-btn {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+}
+.lang-btn:hover {
+  color: #fff;
+}
+.lang-btn.active {
+  background: linear-gradient(135deg, #ff9800, #ff5722);
+  color: #fff;
+  box-shadow: 0 0 8px rgba(255, 152, 0, 0.55);
 }
 
 .main-card {
@@ -1380,8 +1418,40 @@ body {
   40%, 80% { transform: translateX(5px); }
 }
 
+/* 영문 모드 UI 깨짐/줄바꿈 방지 최적화 */
+html[lang="en"] .power-btn {
+  font-size: 12px;
+  white-space: nowrap;
+  padding: 0 3px;
+}
+html[lang="en"] .rps-btn {
+  font-size: clamp(12px, 2.2vh, 16px);
+  white-space: nowrap;
+}
+html[lang="en"] .mode-name,
+html[lang="en"] .mode-desc,
+html[lang="en"] .step-tag-pill,
+html[lang="en"] .bo3-title-badge,
+html[lang="en"] .lobby-action-btn,
+html[lang="en"] .match-stage-title {
+  white-space: nowrap;
+}
+html[lang="en"] .mode-desc {
+  font-size: 10.5px;
+}
+html[lang="en"] .rule-row {
+  grid-template-columns: 62px 44px 44px 1fr;
+  font-size: 10.5px;
+}
+html[lang="en"] .result-text {
+  font-size: clamp(44px, 13vmin, 96px);
+  white-space: nowrap;
+}
+
 @media (max-width: 480px) {
   .power-btn { font-size: 11px; height: 45px; }
+  html[lang="en"] .power-btn { font-size: 10.5px; }
   .rps-btn { border-radius: 12px; }
   .bo3-score-board { font-size: 11px; }
+  .lang-toggle { top: 8px; right: 8px; }
 }
