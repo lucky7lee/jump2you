@@ -288,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSoundToggle = $('btn-sound-toggle');
   const btnInGameExit = $('btn-in-game-exit');
   const tilesEl = $('tiles-container');
+  const cliffBackdrop = $('cliff-backdrop');
   const playerUnit = $('player-unit');
   const aiUnit = $('ai-unit');
   const bustPlayer = $('bust-player');
@@ -813,6 +814,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!deferBustToPunch) {
       updateBustPortraits(mine);
+    }
+
+    // 1~10칸 뒷면 절벽 배경: 전진/후퇴 시 미세 패럴랙스 이동 및 양쪽 낭떠러지 위기 긴장감 연동
+    if (cliffBackdrop) {
+      const clampedPos = Math.max(-5, Math.min(5, state.pos));
+      const bgShiftX = 50 + clampedPos * 2.2;
+      cliffBackdrop.style.backgroundPosition = `center, center, ${bgShiftX}% 62%`;
+      cliffBackdrop.classList.toggle('tension-left', mine <= 2);
+      cliffBackdrop.classList.toggle('tension-right', mine >= 8);
+      cliffBackdrop.classList.toggle('tension-critical', mine <= 1 || mine >= 9);
     }
   }
 
